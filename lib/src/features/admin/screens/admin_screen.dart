@@ -13,6 +13,7 @@ class AdminScreen extends StatefulWidget {
 
 class _AdminScreenState extends State<AdminScreen> {
   bool _isLoading = false;
+  final _tsvController = TextEditingController();
 
   Future<void> _seedData() async {
     setState(() {
@@ -94,19 +95,88 @@ class _AdminScreenState extends State<AdminScreen> {
     }
   }
 
+  Future<void> _importTsvData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final charRepo = CharacterRepository();
+      final tsvData = _tsvController.text;
+      final lines = tsvData.split('
+');
+
+      for (final line in lines) {
+        if (line.isEmpty) continue;
+
+        final parts = line.split('	');
+        final character = HanziCharacter(
+          hanzi: parts[0],
+          pinyin: parts[5],
+          meaning: parts[4],
+          unitId: parts[1],
+          strokeData: StrokeData(
+            width: int.parse(parts[7]),
+            height: int.parse(parts[8]),
+            paths: parts[9].split('|'),
+          ),
+        );
+        await charRepo.addCharacter(character);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('TSV Data imported successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error importing TSV data: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Admin Panel'),
       ),
-      body: Center(
-        child: _isLoading
-            ? const CircularProgressIndicator()
-            : ElevatedButton(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            if (_isLoading)
+              const CircularProgressIndicator()
+            else
+              ElevatedButton(
                 onPressed: _seedData,
                 child: const Text('Seed Initial Data'),
               ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _tsvController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Paste TSV Data Here',
+              ),
+              maxLines: 10,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _importTsvData,
+              child: const Text('Import TSV Data'),
+            ),
+          ],
+        ),
       ),
     );
   }
