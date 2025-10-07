@@ -61,64 +61,66 @@ class _WritingScreenState extends State<WritingScreen>
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => DrawingProvider(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Luyện viết: ${widget.character.hanzi}'),
-          actions: [
-            Consumer<DrawingProvider>(
-              builder: (context, drawingProvider, child) => IconButton(
-                icon: const Icon(Icons.undo),
-                onPressed: drawingProvider.undo,
-                tooltip: 'Hoàn tác',
+      child: Builder(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: Text('Luyện viết: ${widget.character.hanzi}'),
+            actions: [
+              Consumer<DrawingProvider>(
+                builder: (context, drawingProvider, child) => IconButton(
+                  icon: const Icon(Icons.undo),
+                  onPressed: drawingProvider.undo,
+                  tooltip: 'Hoàn tác',
+                ),
               ),
-            ),
-            Consumer<DrawingProvider>(
-              builder: (context, drawingProvider, child) => IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: drawingProvider.clear,
-                tooltip: 'Xóa toàn bộ',
+              Consumer<DrawingProvider>(
+                builder: (context, drawingProvider, child) => IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: drawingProvider.clear,
+                  tooltip: 'Xóa toàn bộ',
+                ),
               ),
-            ),
-          ],
-        ),
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildCoachPanel(context),
-              _buildHintChips(),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Center(
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: WritingPad(
-                        boardKey: _boardKey,
-                        strokeData: widget.character.strokeData,
-                        referenceStrokes: _referenceStrokes,
-                        showOutline: _showOutline,
-                        strokePreview:
-                            _showStrokeOrder ? _previewAnimation : null,
+            ],
+          ),
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildCoachPanel(context),
+                _buildHintChips(),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: WritingPad(
+                          boardKey: _boardKey,
+                          strokeData: widget.character.strokeData,
+                          referenceStrokes: _referenceStrokes,
+                          showOutline: _showOutline,
+                          strokePreview:
+                              _showStrokeOrder ? _previewAnimation : null,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              if (_lastFeedback != null) _buildFeedbackBanner(context),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: FilledButton.icon(
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Kiểm tra bài viết'),
-                  onPressed: () => _evaluateWriting(context),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
+                if (_lastFeedback != null) _buildFeedbackBanner(context),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Kiểm tra bài viết'),
+                    onPressed: () => _evaluateWriting(context),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -329,19 +331,22 @@ class _WritingScreenState extends State<WritingScreen>
 
     if (!mounted) return;
 
+    final drawingProvider = context.read<DrawingProvider>();
+    final navigator = Navigator.of(context);
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _WritingResultSheet(
+      builder: (sheetContext) => _WritingResultSheet(
         character: widget.character,
         feedback: feedback,
         onRetry: () {
-          Navigator.of(context).pop();
-          this.context.read<DrawingProvider>().clear();
+          Navigator.of(sheetContext).pop();
+          drawingProvider.clear();
         },
         onContinue: () {
-          Navigator.of(context).pop();
-          Navigator.of(this.context).maybePop();
+          Navigator.of(sheetContext).pop();
+          navigator.maybePop();
         },
       ),
     );

@@ -31,9 +31,13 @@ class AppRouter {
                       Unit? unit;
                       if (extra is Unit) {
                         unit = extra;
-                      } else if (extra is Map<String, dynamic> && extra['unit'] is Unit) {
-                        unit = extra['unit'] as Unit;
-                      } else {
+                      } else if (extra is Map) {
+                        final candidate = extra['unit'];
+                        if (candidate is Unit) {
+                          unit = candidate;
+                        }
+                      }
+                      if (unit == null) {
                         final unitId = state.pathParameters['unitId'];
                         if (unitId != null) {
                           try {
@@ -56,9 +60,11 @@ class AppRouter {
                           HanziCharacter? character;
                           if (extra is HanziCharacter) {
                             character = extra;
-                          } else if (extra is Map<String, dynamic> &&
-                              extra['character'] is HanziCharacter) {
-                            character = extra['character'] as HanziCharacter;
+                          } else if (extra is Map) {
+                            final candidate = extra['character'];
+                            if (candidate is HanziCharacter) {
+                              character = candidate;
+                            }
                           }
 
                           if (character == null) {
