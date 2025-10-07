@@ -1,9 +1,19 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/src/models/user_profile.dart';
+
+class AuthFailure implements Exception {
+  const AuthFailure(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'AuthFailure: $message';
+}
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -62,9 +72,32 @@ class AuthService with ChangeNotifier {
 
       notifyListeners();
       return _user;
+    } on PlatformException catch (e) {
+      if (e.code == GoogleSignIn.kNetworkError) {
+        throw const AuthFailure(
+          'Không thể kết nối tới Google. Vui lòng kiểm tra mạng và thử lại.',
+        );
+      }
+
+      final message = e.message ?? '';
+      if (message.contains('com.google.android.gms')) {
+        throw const AuthFailure(
+          'Thiết bị này thiếu Google Play services nên không thể đăng nhập bằng Google. Vui lòng cài đặt Google Play services hoặc chọn cách đăng nhập khác.',
+        );
+      }
+
+      throw AuthFailure(
+        'Đăng nhập Google thất bại: ${e.message ?? 'Vui lòng thử lại sau.'}',
+      );
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure(
+        'Không thể xác thực với Google: ${e.message ?? 'Vui lòng thử lại.'}',
+      );
     } catch (e) {
       debugPrint('Error during Google Sign-In: $e');
-      return null;
+      throw const AuthFailure(
+        'Có lỗi không xác định khi đăng nhập Google. Vui lòng thử lại.',
+      );
     }
   }
 
@@ -99,7 +132,9 @@ class AuthService with ChangeNotifier {
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       debugPrint('Error signing in with email: ${e.message}');
-      throw Exception('Error signing in with email: ${e.message}');
+      throw AuthFailure(
+        e.message ?? 'Không thể đăng nhập bằng email và mật khẩu.',
+      );
     }
   }
 
@@ -128,7 +163,9 @@ class AuthService with ChangeNotifier {
       return user;
     } on FirebaseAuthException catch (e) {
       debugPrint('Error creating user: ${e.message}');
-      throw Exception('Error creating user: ${e.message}');
+      throw AuthFailure(
+        e.message ?? 'Không thể tạo tài khoản mới. Vui lòng thử lại.',
+      );
     }
   }
 
@@ -140,9 +177,16 @@ class AuthService with ChangeNotifier {
         _userProfile = await _getOrCreateUserProfile(user);
       }
       return user;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Error signing in anonymously: ${e.message}');
+      throw AuthFailure(
+        e.message ?? 'Không thể đăng nhập ẩn danh lúc này.',
+      );
     } catch (e) {
       debugPrint('Error signing in anonymously: $e');
-      throw Exception('Error signing in anonymously: $e');
+      throw const AuthFailure(
+        'Có lỗi khi đăng nhập ẩn danh. Vui lòng thử lại sau.',
+      );
     }
   }
 

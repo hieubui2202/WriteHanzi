@@ -94,6 +94,14 @@
     3.  **(Nâng cao) Nhận diện nét vẽ**: So sánh nét vẽ của người dùng với dữ liệu nét vẽ chuẩn của ký tự (cần tìm thư viện hoặc API hỗ trợ).
     4.  **Cập nhật tiến độ**: Khi người dùng viết đúng, gọi `Repository` để cập nhật tiến độ trong `UserProfile`.
 
+#### **Bước 4: Củng cố trải nghiệm đăng nhập**
+- **Mục tiêu**: Đảm bảo người dùng nhận được phản hồi rõ ràng khi đăng nhập thất bại, đặc biệt trên các thiết bị thiếu Google Play services.
+- **Công việc**:
+    1. Tạo lớp `AuthFailure` để chuẩn hóa thông điệp lỗi từ `AuthService`.
+    2. Bổ sung xử lý lỗi chi tiết cho đăng nhập Google, email/password và ẩn danh.
+    3. Cập nhật `LoginScreen` hiển thị snackbar khi có lỗi và khóa nút khi đang xử lý.
+    4. Hiển thị tiến trình tải để người dùng biết ứng dụng đang xử lý yêu cầu.
+
 ### Giai đoạn 3: Đánh bóng và Mở rộng (Tương lai)
 - **Mục tiêu**: Nâng cao trải nghiệm người dùng và thêm các tính năng bổ sung.
 - **Công việc**:
