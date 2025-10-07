@@ -1,18 +1,32 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 class WritingCanvas extends StatefulWidget {
   const WritingCanvas({super.key});
 
   @override
-  State<WritingCanvas> createState() => _WritingCanvasState();
+  WritingCanvasState createState() => WritingCanvasState();
 }
 
-class _WritingCanvasState extends State<WritingCanvas> {
-  List<List<Offset?>> _strokes = [];
+class WritingCanvasState extends State<WritingCanvas> {
+  final List<List<Offset?>> _strokes = [];
 
-  void _clearCanvas() {
+  List<List<Offset?>> get strokes =>
+      _strokes.map((stroke) => List<Offset?>.from(stroke)).toList();
+
+  void clearCanvas() {
     setState(() {
-      _strokes = [];
+      _strokes.clear();
+    });
+  }
+
+  void undoLastStroke() {
+    if (_strokes.isEmpty) {
+      return;
+    }
+    setState(() {
+      _strokes.removeLast();
     });
   }
 
@@ -30,13 +44,15 @@ class _WritingCanvasState extends State<WritingCanvas> {
         });
       },
       onPanEnd: (details) {
-        setState(() {
-           _strokes.last.add(null); // End of a stroke
-        });
+        if (_strokes.isNotEmpty) {
+          setState(() {
+            _strokes.last.add(null);
+          });
+        }
       },
       child: CustomPaint(
         painter: _CanvasPainter(_strokes),
-        child: Container(), // The canvas needs a size
+        child: Container(),
       ),
     );
   }
@@ -56,15 +72,22 @@ class _CanvasPainter extends CustomPainter {
 
     for (final stroke in strokes) {
       for (int i = 0; i < stroke.length - 1; i++) {
-        if (stroke[i] != null && stroke[i + 1] != null) {
-          canvas.drawLine(stroke[i]!, stroke[i + 1]!, paint);
-        } else if (stroke[i] != null && stroke[i + 1] == null) {
-          canvas.drawPoints(PointMode.points, [stroke[i]!], paint..strokeWidth = 8.0 );
-        } 
+        final current = stroke[i];
+        final next = stroke[i + 1];
+        if (current != null && next != null) {
+          canvas.drawLine(current, next, paint);
+        } else if (current != null && next == null) {
+          canvas.drawPoints(
+            ui.PointMode.points,
+            [current],
+            paint..strokeWidth = 8.0,
+          );
+        }
       }
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  @override
+  bool shouldRepaint(covariant _CanvasPainter oldDelegate) => true;
 }

@@ -1,45 +1,63 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'user_profile.g.dart';
+
+Timestamp? _timestampFromJson(Object? value) {
+  if (value is Timestamp) {
+    return value;
+  }
+  return null;
+}
+
+Object? _timestampToJson(Timestamp? timestamp) => timestamp;
+
+@JsonSerializable()
 class UserProfile {
-  final String id;
-  final String email;
+  final String uid;
+  final String? email;
   final String? displayName;
   final String? photoURL;
   final int xp;
   final int streak;
-  final Map<String, dynamic> progress;
+  final Timestamp? lastCompleted;
+  final Map<String, String> progress;
 
-  UserProfile({
-    required this.id,
-    required this.email,
+  const UserProfile({
+    required this.uid,
+    this.email,
     this.displayName,
     this.photoURL,
-    required this.xp,
-    required this.streak,
-    required this.progress,
+    this.xp = 0,
+    this.streak = 0,
+    this.lastCompleted,
+    this.progress = const {},
   });
 
-  factory UserProfile.fromMap(Map<String, dynamic> data, String id) {
-    return UserProfile(
-      id: id,
-      email: data['email'] ?? '',
-      displayName: data['displayName'],
-      photoURL: data['photoURL'],
-      xp: data['xp'] ?? 0,
-      streak: data['streak'] ?? 0,
-      progress: Map<String, dynamic>.from(data['progress'] ?? {}),
-    );
-  }
+  factory UserProfile.fromJson(Map<String, dynamic> json) =>
+      _$UserProfileFromJson(json);
 
-  Map<String, dynamic> toMap() {
-    return {
-      'email': email,
-      'displayName': displayName,
-      'photoURL': photoURL,
-      'xp': xp,
-      'streak': streak,
-      'progress': progress,
-    };
+  Map<String, dynamic> toJson() => _$UserProfileToJson(this);
+
+  UserProfile copyWith({
+    String? uid,
+    String? email,
+    String? displayName,
+    String? photoURL,
+    int? xp,
+    int? streak,
+    Timestamp? lastCompleted,
+    Map<String, String>? progress,
+  }) {
+    return UserProfile(
+      uid: uid ?? this.uid,
+      email: email ?? this.email,
+      displayName: displayName ?? this.displayName,
+      photoURL: photoURL ?? this.photoURL,
+      xp: xp ?? this.xp,
+      streak: streak ?? this.streak,
+      lastCompleted: lastCompleted ?? this.lastCompleted,
+      progress: progress ?? this.progress,
+    );
   }
 }

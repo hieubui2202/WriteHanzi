@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../models/hanzi_character.dart';
 import '../../../models/unit.dart';
 import '../../../repositories/character_repository.dart';
@@ -15,6 +16,12 @@ class _AdminScreenState extends State<AdminScreen> {
   bool _isLoading = false;
   final _tsvController = TextEditingController();
 
+  @override
+  void dispose() {
+    _tsvController.dispose();
+    super.dispose();
+  }
+
   Future<void> _seedData() async {
     setState(() {
       _isLoading = true;
@@ -24,56 +31,84 @@ class _AdminScreenState extends State<AdminScreen> {
       final unitRepo = UnitRepository();
       final charRepo = CharacterRepository();
 
-      // Unit 1: Basic Strokes
       final unit1 = Unit(
         id: 'unit1',
         title: 'Cơ bản 1',
         description: 'Các nét cơ bản và các ký tự đơn giản.',
         order: 1,
-        characters: ['一', '二', '三', '十', '人'],
+        characters: const ['一', '二', '三', '十', '人'],
         xpReward: 100,
       );
       await unitRepo.addUnit(unit1);
 
-      await charRepo.addCharacter(HanziCharacter(
+      Future<void> createCharacter({
+        required String hanzi,
+        required String pinyin,
+        required String meaning,
+        required List<String> paths,
+      }) async {
+        await charRepo.addCharacter(
+          HanziCharacter(
+            hanzi: hanzi,
+            pinyin: pinyin,
+            meaning: meaning,
+            unitId: unit1.id,
+            strokeData: StrokeData(
+              width: 1024,
+              height: 1024,
+              paths: paths,
+            ),
+          ),
+        );
+      }
+
+      await createCharacter(
         hanzi: '一',
         pinyin: 'yī',
         meaning: 'một',
-        unitId: 'unit1',
-        strokeData: StrokeData(width: 1024, height: 1024, paths: ['M 54 511 c 102 0 799 1 915 1'])
-      ));
+        paths: const ['M 54 511 c 102 0 799 1 915 1'],
+      );
 
-       await charRepo.addCharacter(HanziCharacter(
+      await createCharacter(
         hanzi: '二',
         pinyin: 'èr',
         meaning: 'hai',
-        unitId: 'unit1',
-        strokeData: StrokeData(width: 1024, height: 1024, paths: ['M 163 260 c 237 0 541 1 699 1','M 103 540 c 260 0 653 1 818 1'])
-      ));
+        paths: const [
+          'M 163 260 c 237 0 541 1 699 1',
+          'M 103 540 c 260 0 653 1 818 1',
+        ],
+      );
 
-       await charRepo.addCharacter(HanziCharacter(
+      await createCharacter(
         hanzi: '三',
         pinyin: 'sān',
         meaning: 'ba',
-        unitId: 'unit1',
-        strokeData: StrokeData(width: 1024, height: 1024, paths: ['M 203 234 c 219 0 491 1 610 1','M 163 440 c 245 0 554 1 700 1','M 102 654 c 272 0 689 1 853 1'])
-      ));
+        paths: const [
+          'M 203 234 c 219 0 491 1 610 1',
+          'M 163 440 c 245 0 554 1 700 1',
+          'M 102 654 c 272 0 689 1 853 1',
+        ],
+      );
 
-      await charRepo.addCharacter(HanziCharacter(
+      await createCharacter(
         hanzi: '十',
         pinyin: 'shí',
         meaning: 'mười',
-        unitId: 'unit1',
-        strokeData: StrokeData(width: 1024, height: 1024, paths: ['M 152 491 c 252 0 598 1 744 1','M 444 141 c 1 113 1 677 0 803'])
-      ));
+        paths: const [
+          'M 152 491 c 252 0 598 1 744 1',
+          'M 444 141 c 1 113 1 677 0 803',
+        ],
+      );
 
-      await charRepo.addCharacter(HanziCharacter(
+      await createCharacter(
         hanzi: '人',
         pinyin: 'rén',
         meaning: 'người',
-        unitId: 'unit1',
-        strokeData: StrokeData(width: 1024, height: 1024, paths: ['M 503 162 c -72 138 -225 352 -335 504','M 515 163 c 101 133 283 392 371 529'])
-      ));
+        paths: const [
+          'M 503 162 c -72 138 -225 352 -335 504',
+          'M 515 163 c 101 133 283 392 371 529',
+        ],
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,23 +137,32 @@ class _AdminScreenState extends State<AdminScreen> {
 
     try {
       final charRepo = CharacterRepository();
-      final tsvData = _tsvController.text;
-      final lines = tsvData.split('
-');
+      final lines = _tsvController.text.split('\n');
 
-      for (final line in lines) {
+      for (final rawLine in lines) {
+        final line = rawLine.trim();
         if (line.isEmpty) continue;
 
-        final parts = line.split('	');
+        final parts = line.split('\t');
+        if (parts.length < 10) {
+          continue;
+        }
+
+        final strokePaths = parts[9]
+            .split('|')
+            .map((path) => path.trim())
+            .where((path) => path.isNotEmpty)
+            .toList();
+
         final character = HanziCharacter(
           hanzi: parts[0],
-          pinyin: parts[5],
-          meaning: parts[4],
           unitId: parts[1],
+          meaning: parts[4],
+          pinyin: parts[5],
           strokeData: StrokeData(
             width: int.parse(parts[7]),
             height: int.parse(parts[8]),
-            paths: parts[9].split('|'),
+            paths: strokePaths,
           ),
         );
         await charRepo.addCharacter(character);
