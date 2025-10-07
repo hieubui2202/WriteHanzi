@@ -476,10 +476,10 @@ packages:
     dependency: "direct dev"
     description:
       name: json_serializable
-      sha256: "33a040668b31b320aafa4822b7b1e177e163fc3c1e835c6750319d4ab23aa6fe"
+      sha256: "c50ef5fc083d5b5e12eef489503ba3bf5ccc899e487d691584699b4bdefeea8c"
       url: "https://pub.dev"
     source: hosted
-    version: "6.11.1"
+    version: "6.9.5"
   leak_tracker:
     dependency: transitive
     description:
