@@ -77,7 +77,7 @@ class AuthService with ChangeNotifier {
       return UserProfile.fromMap(data, user.uid);
     } else {
       final newUserProfile = UserProfile(
-        id: user.uid,
+        uid: user.uid,
         email: user.email ?? '',
         displayName: user.displayName ?? 'Anonymous User',
         photoURL: user.photoURL,
@@ -90,7 +90,7 @@ class AuthService with ChangeNotifier {
     }
   }
 
-    Future<User?> signInWithEmailAndPassword(String email, String password) async {
+  Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
       final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -114,7 +114,7 @@ class AuthService with ChangeNotifier {
       final User? user = userCredential.user;
       if (user != null) {
         final newUserProfile = UserProfile(
-          id: user.uid,
+          uid: user.uid,
           email: email,
           displayName: displayName,
           xp: 0,

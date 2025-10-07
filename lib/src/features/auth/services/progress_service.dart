@@ -33,7 +33,7 @@ class ProgressService {
       final userProfile = UserProfile.fromMap(snapshot.data()!, snapshot.id);
 
       // 1. Update Progress
-      final newProgress = Map<String, dynamic>.from(userProfile.progress);
+      final newProgress = Map<String, String>.from(userProfile.progress);
       newProgress[characterId] = 'completed';
 
       // 2. Update XP
