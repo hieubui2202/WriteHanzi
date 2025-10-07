@@ -1,0 +1,10 @@
+[
+  {
+    "id": "unit_1",
+    "title": "Section 1, Unit 1",
+    "description": "Học chữ cơ bản",
+    "order": 1,
+    "characters": ["水"],
+    "xpReward": 10
+  }
+]
