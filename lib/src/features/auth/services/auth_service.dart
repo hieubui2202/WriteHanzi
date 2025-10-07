@@ -1,6 +1,6 @@
-
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/src/models/user_profile.dart';
@@ -8,7 +8,10 @@ import 'package:myapp/src/models/user_profile.dart';
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Initialize with the correct database URL
+  final FirebaseDatabase _database = FirebaseDatabase.instanceFor(
+      app: Firebase.app(),
+      databaseURL: 'https://testlogin-4767c-default-rtdb.firebaseio.com/');
 
   User? _user;
   UserProfile? _userProfile;
@@ -23,7 +26,12 @@ class AuthService with ChangeNotifier {
   Future<void> _onAuthStateChanged(User? user) async {
     _user = user;
     if (user != null) {
-      _userProfile = await _getOrCreateUserProfile(user);
+      try {
+        _userProfile = await _getOrCreateUserProfile(user);
+      } catch (e) {
+        debugPrint("Error in _onAuthStateChanged: $e");
+        _userProfile = null;
+      }
     } else {
       _userProfile = null;
     }
@@ -37,13 +45,15 @@ class AuthService with ChangeNotifier {
         return null; // User canceled the sign-in
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
       _user = userCredential.user;
 
       if (_user != null) {
@@ -59,11 +69,12 @@ class AuthService with ChangeNotifier {
   }
 
   Future<UserProfile> _getOrCreateUserProfile(User user) async {
-    final docRef = _firestore.collection('users').doc(user.uid);
-    final snapshot = await docRef.get();
+    final dbRef = _database.ref('users/${user.uid}');
+    final snapshot = await dbRef.get();
 
-    if (snapshot.exists) {
-      return UserProfile.fromMap(snapshot.data()!, snapshot.id);
+    if (snapshot.exists && snapshot.value != null) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      return UserProfile.fromMap(data, user.uid);
     } else {
       final newUserProfile = UserProfile(
         id: user.uid,
@@ -71,13 +82,15 @@ class AuthService with ChangeNotifier {
         displayName: user.displayName ?? 'Anonymous User',
         photoURL: user.photoURL,
         xp: 0,
+        streak: 0,
+        progress: {},
       );
-      await docRef.set(newUserProfile.toMap());
+      await dbRef.set(newUserProfile.toMap());
       return newUserProfile;
     }
   }
 
-  Future<User?> signInWithEmailAndPassword(String email, String password) async {
+    Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
       final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -86,50 +99,52 @@ class AuthService with ChangeNotifier {
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       debugPrint('Error signing in with email: ${e.message}');
-      return null;
+      throw Exception('Error signing in with email: ${e.message}');
     }
   }
 
-    Future<User?> createUserWithEmailAndPassword(String email, String password, String displayName) async {
+  Future<User?> createUserWithEmailAndPassword(
+      String email, String password, String displayName) async {
     try {
-      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      final UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-       final User? user = userCredential.user;
+      final User? user = userCredential.user;
       if (user != null) {
-        // Create user profile in Firestore
         final newUserProfile = UserProfile(
           id: user.uid,
           email: email,
           displayName: displayName,
           xp: 0,
+          streak: 0,
+          progress: {},
+          photoURL: null,
         );
-        await _firestore.collection('users').doc(user.uid).set(newUserProfile.toMap());
+        await _database.ref('users/${user.uid}').set(newUserProfile.toMap());
         _userProfile = newUserProfile;
       }
       return user;
     } on FirebaseAuthException catch (e) {
       debugPrint('Error creating user: ${e.message}');
-      return null;
+      throw Exception('Error creating user: ${e.message}');
     }
   }
-
 
   Future<User?> signInAnonymously() async {
     try {
       final userCredential = await _auth.signInAnonymously();
-       final User? user = userCredential.user;
-       if (user != null) {
+      final User? user = userCredential.user;
+      if (user != null) {
         _userProfile = await _getOrCreateUserProfile(user);
       }
       return user;
     } catch (e) {
       debugPrint('Error signing in anonymously: $e');
-      return null;
+      throw Exception('Error signing in anonymously: $e');
     }
   }
-
 
   Future<void> signOut() async {
     await _googleSignIn.signOut();

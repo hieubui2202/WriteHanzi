@@ -56,6 +56,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '528531549397',
     projectId: 'testlogin-4767c',
     storageBucket: 'testlogin-4767c.firebasestorage.app',
+    androidClientId: '528531549397-boitsftm1aqb7dce71ud32mosj47h8g1.apps.googleusercontent.com',
+    iosClientId: '528531549397-aj8boe89dmcf1c474i96fphlok8lg571.apps.googleusercontent.com',
     iosBundleId: '1',
   );
 

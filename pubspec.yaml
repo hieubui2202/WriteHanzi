@@ -24,7 +24,8 @@ dependencies:
   
   # Added for json_serializable
   json_annotation: ^4.9.0
-  google_sign_in: ^7.2.0
+  google_sign_in: ^6.2.1 # Downgraded for stability
+  firebase_database: ^12.0.2
 
 dev_dependencies:
   flutter_test:

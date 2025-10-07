@@ -13,6 +13,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _displayNameController = TextEditingController(); // Add this
   bool _isLogin = true;
 
   @override
@@ -33,6 +34,13 @@ class _LoginScreenState extends State<LoginScreen> {
               children: <Widget>[
                 Text('Hanzi Writing Trainer', style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 32),
+                if (!_isLogin)
+                  TextFormField(
+                    controller: _displayNameController,
+                    decoration: const InputDecoration(labelText: 'Display Name'),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Enter a display name' : null,
+                  ),
+                if (!_isLogin) const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
@@ -54,7 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (_isLogin) {
                         await authService.signInWithEmailAndPassword(email, password);
                       } else {
-                        await authService.createUserWithEmailAndPassword(email, password);
+                        final displayName = _displayNameController.text;
+                        await authService.createUserWithEmailAndPassword(email, password, displayName);
                       }
                     }
                   },
