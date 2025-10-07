@@ -9,6 +9,7 @@ import 'package:myapp/src/features/home/screens/unit_details_screen.dart';
 import 'package:myapp/src/features/writing/screens/writing_screen.dart';
 import 'package:myapp/src/models/hanzi_character.dart';
 import 'package:myapp/src/models/unit.dart';
+import 'package:myapp/src/repositories/fallback_content.dart';
 
 class AppRouter {
   AppRouter(this.authService);
@@ -26,7 +27,22 @@ class AppRouter {
                 GoRoute(
                     path: 'unit/:unitId',
                     builder: (context, state) {
-                      final unit = state.extra as Unit?;
+                      final extra = state.extra;
+                      Unit? unit;
+                      if (extra is Unit) {
+                        unit = extra;
+                      } else if (extra is Map<String, dynamic> && extra['unit'] is Unit) {
+                        unit = extra['unit'] as Unit;
+                      } else {
+                        final unitId = state.pathParameters['unitId'];
+                        if (unitId != null) {
+                          try {
+                            unit = FallbackContent.units
+                                .firstWhere((fallbackUnit) => fallbackUnit.id == unitId);
+                          } catch (_) {}
+                        }
+                      }
+
                       if (unit != null) {
                         return UnitDetailsScreen(unit: unit);
                       }
@@ -36,7 +52,25 @@ class AppRouter {
                       GoRoute(
                         path: 'write/:characterId',
                         builder: (context, state) {
-                          final character = state.extra as HanziCharacter?;
+                          final extra = state.extra;
+                          HanziCharacter? character;
+                          if (extra is HanziCharacter) {
+                            character = extra;
+                          } else if (extra is Map<String, dynamic> &&
+                              extra['character'] is HanziCharacter) {
+                            character = extra['character'] as HanziCharacter;
+                          }
+
+                          if (character == null) {
+                            final characterId = state.pathParameters['characterId'];
+                            if (characterId != null) {
+                              try {
+                                character = FallbackContent.characters.firstWhere(
+                                  (fallbackCharacter) => fallbackCharacter.id == characterId,
+                                );
+                              } catch (_) {}
+                            }
+                          }
                           if (character != null) {
                             return WritingScreen(character: character);
                           }

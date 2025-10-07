@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'firebase_options.dart';
 import 'package:myapp/src/core/routing/app_router.dart';
 import 'package:myapp/src/features/auth/services/auth_service.dart';
+import 'package:myapp/src/features/auth/services/progress_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthService()),
+        Provider(create: (_) => ProgressService()),
       ],
       child: const MyApp(),
     ),

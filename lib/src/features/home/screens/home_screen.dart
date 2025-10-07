@@ -56,7 +56,10 @@ class HomeScreen extends StatelessWidget {
                         subtitle: Text(unit.description),
                         trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
-                          context.go('/unit/${unit.id}', extra: unit);
+                          context.go(
+                            '/unit/${unit.id}',
+                            extra: {'unit': unit},
+                          );
                         },
                       ),
                     );

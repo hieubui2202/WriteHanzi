@@ -14,6 +14,7 @@ class UserProfileHeader extends StatelessWidget {
     final user = authService.user;
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final progressService = context.read<ProgressService>();
 
     if (user != null && user.isAnonymous) {
       final userProfile = authService.userProfile;
@@ -25,7 +26,7 @@ class UserProfileHeader extends StatelessWidget {
 
     return StreamBuilder<UserProfile?>(
       stream: user != null
-          ? ProgressService().getUserProfileStream(user.uid)
+          ? progressService.getUserProfileStream(user.uid)
           : Stream.value(null),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

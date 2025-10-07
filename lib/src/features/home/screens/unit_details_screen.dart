@@ -18,6 +18,7 @@ class UnitDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     final user = authService.user;
+    final progressService = context.read<ProgressService>();
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +40,11 @@ class UnitDetailsScreen extends StatelessWidget {
           final characters = snapshot.data!;
 
           return StreamBuilder<UserProfile?>(
-            stream: user != null ? ProgressService().getUserProfileStream(user.uid) : Stream.value(null),
+            stream: user != null
+                ? user.isAnonymous
+                    ? Stream.value(authService.userProfile)
+                    : progressService.getUserProfileStream(user.uid)
+                : Stream.value(null),
             builder: (context, userProfileSnapshot) {
               final userProfile = userProfileSnapshot.data;
 
@@ -59,8 +64,13 @@ class UnitDetailsScreen extends StatelessWidget {
                           ? Icon(Icons.check_circle, color: Colors.green)
                           : const Icon(Icons.arrow_forward_ios),
                       onTap: () {
-                        // Navigate to the writing screen, passing the character object
-                        context.go('/unit/${unit.id}/write/${character.id}', extra: character);
+                        context.go(
+                          '/unit/${unit.id}/write/${character.id}',
+                          extra: {
+                            'unit': unit,
+                            'character': character,
+                          },
+                        );
                       },
                     ),
                   );
