@@ -331,7 +331,6 @@ class _WritingScreenState extends State<WritingScreen>
 
     if (!mounted) return;
 
-    final drawingProvider = context.read<DrawingProvider>();
     final navigator = Navigator.of(context);
 
     await showModalBottomSheet<void>(
