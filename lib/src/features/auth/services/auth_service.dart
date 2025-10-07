@@ -97,7 +97,23 @@ class AuthService with ChangeNotifier {
     }
   }
 
+  UserProfile _buildGuestProfile(User user) {
+    return UserProfile(
+      uid: user.uid,
+      email: 'Chế độ khách',
+      displayName: 'Khách',
+      photoURL: null,
+      xp: 0,
+      streak: 0,
+      progress: const {},
+    );
+  }
+
   Future<UserProfile> _getOrCreateUserProfile(User user) async {
+    if (user.isAnonymous) {
+      return _buildGuestProfile(user);
+    }
+
     final docRef = _firestore.collection('users').doc(user.uid);
 
     try {
@@ -201,6 +217,9 @@ class AuthService with ChangeNotifier {
   Stream<UserProfile?> get userProfileStream {
     return _auth.authStateChanges().asyncMap((user) {
       if (user != null) {
+        if (user.isAnonymous) {
+          return _userProfile ?? _buildGuestProfile(user);
+        }
         return _getOrCreateUserProfile(user);
       }
       return null;

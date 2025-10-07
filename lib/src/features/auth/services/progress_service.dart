@@ -18,7 +18,7 @@ class ProgressService {
 
   Future<void> completeCharacter(String characterId, int xpValue) async {
     final user = _auth.currentUser;
-    if (user == null) return; // Not logged in
+    if (user == null || user.isAnonymous) return; // Not logged in or guest mode
 
     final userRef = _firestore.collection('users').doc(user.uid);
 

@@ -15,8 +15,18 @@ class UserProfileHeader extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
+    if (user != null && user.isAnonymous) {
+      final userProfile = authService.userProfile;
+      if (userProfile == null) {
+        return _buildPlaceholder(context);
+      }
+      return _buildProfileContent(context, colorScheme, textTheme, userProfile);
+    }
+
     return StreamBuilder<UserProfile?>(
-      stream: user != null ? ProgressService().getUserProfileStream(user.uid) : Stream.value(null),
+      stream: user != null
+          ? ProgressService().getUserProfileStream(user.uid)
+          : Stream.value(null),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // Show a placeholder with shimmer effect while loading
@@ -26,53 +36,75 @@ class UserProfileHeader extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        final userProfile = snapshot.data!;
-        final hasDisplayName = userProfile.displayName != null && userProfile.displayName!.isNotEmpty;
-        final hasPhotoUrl = userProfile.photoURL != null && userProfile.photoURL!.isNotEmpty;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: colorScheme.primaryContainer,
-                backgroundImage: hasPhotoUrl ? NetworkImage(userProfile.photoURL!) : null,
-                child: !hasPhotoUrl
-                    ? const Icon(Icons.person, size: 35,)
-                    : null,
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      hasDisplayName ? userProfile.displayName! : 'Xin chào!',
-                      style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                     const SizedBox(height: 2),
-                    Text(
-                      userProfile.email ?? 'Người dùng ẩn danh',
-                      style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 15),
-              // XP and Streak
-              _buildStatColumn(context, Icons.star_border, '${userProfile.xp}', 'XP'),
-              const SizedBox(width: 12),
-              _buildStatColumn(context, Icons.local_fire_department_outlined, '${userProfile.streak}', 'Streak'),
-            ],
-          ),
+        return _buildProfileContent(
+          context,
+          colorScheme,
+          textTheme,
+          snapshot.data!,
         );
       },
     );
   }
-  
+
+  Widget _buildProfileContent(
+    BuildContext context,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    UserProfile userProfile,
+  ) {
+    final hasDisplayName =
+        userProfile.displayName != null && userProfile.displayName!.isNotEmpty;
+    final hasPhotoUrl =
+        userProfile.photoURL != null && userProfile.photoURL!.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: colorScheme.primaryContainer,
+            backgroundImage:
+                hasPhotoUrl ? NetworkImage(userProfile.photoURL!) : null,
+            child: !hasPhotoUrl
+                ? const Icon(
+                    Icons.person,
+                    size: 35,
+                  )
+                : null,
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasDisplayName ? userProfile.displayName! : 'Xin chào!',
+                  style:
+                      textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  userProfile.email ?? 'Người dùng ẩn danh',
+                  style: textTheme.bodySmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 15),
+          // XP and Streak
+          _buildStatColumn(context, Icons.star_border, '${userProfile.xp}', 'XP'),
+          const SizedBox(width: 12),
+          _buildStatColumn(
+              context, Icons.local_fire_department_outlined, '${userProfile.streak}', 'Streak'),
+        ],
+      ),
+    );
+  }
+
   // A widget for XP and Streak column
   Widget _buildStatColumn(BuildContext context, IconData icon, String value, String label) {
     final textTheme = Theme.of(context).textTheme;
