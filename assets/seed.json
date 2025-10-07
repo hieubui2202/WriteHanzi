@@ -1,0 +1,40 @@
+{
+  "characters": {
+    "茶": {
+      "pinyin": "chá",
+      "meaning": "tea",
+      "strokes": 9,
+      "ttsUrl": "https://example.com/audio/cha.mp3"
+    },
+    "水": {
+      "pinyin": "shuǐ",
+      "meaning": "water",
+      "strokes": 4,
+      "ttsUrl": "https://example.com/audio/shui.mp3"
+    },
+    "人": {
+      "pinyin": "rén",
+      "meaning": "person",
+      "strokes": 2,
+      "ttsUrl": "https://example.com/audio/ren.mp3"
+    }
+  },
+  "units": {
+    "unit1": {
+      "unitName": "Greetings",
+      "characters": ["茶", "水", "人"]
+    }
+  },
+  "users": {
+    "user123": {
+      "username": "testuser",
+      "email": "test@example.com",
+      "progress": {
+        "unit1": 80
+      },
+      "isAdmin": true,
+      "lastLogin": "2024-07-29T10:00:00Z",
+      "avatarUrl": "https://example.com/avatars/user123.png"
+    }
+  }
+}

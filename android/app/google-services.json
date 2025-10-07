@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "528531549397",
+    "firebase_url": "https://testlogin-4767c-default-rtdb.firebaseio.com",
     "project_id": "testlogin-4767c",
     "storage_bucket": "testlogin-4767c.firebasestorage.app"
   },

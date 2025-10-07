@@ -1,4 +1,3 @@
-
 name: myapp
 description: "A new Flutter project."
 publish_to: 'none' 
@@ -37,3 +36,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/
