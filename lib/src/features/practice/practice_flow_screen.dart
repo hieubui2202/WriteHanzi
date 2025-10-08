@@ -669,18 +669,28 @@ class _StrokeAnimationPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final bgPaint = Paint()
+    final gridPaint = Paint()
       ..style = PaintingStyle.stroke
       ..color = const Color(0xFF243059)
       ..strokeWidth = 0.8
       ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..pathEffect = dashPathEffect(const [3, 3]);
+      ..strokeJoin = StrokeJoin.round;
 
     final rect = Rect.fromLTWH(1, 1, size.width - 2, size.height - 2);
-    canvas.drawRect(rect, bgPaint);
-    canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), bgPaint);
-    canvas.drawLine(Offset(size.width / 2, 0), Offset(size.width / 2, size.height), bgPaint);
+    final dashArray = CircularIntervalList<double>([3, 3]);
+
+    final rectPath = Path()..addRect(rect);
+    canvas.drawPath(dashPath(rectPath, dashArray: dashArray), gridPaint);
+
+    final horizontalGuide = Path()
+      ..moveTo(0, size.height / 2)
+      ..lineTo(size.width, size.height / 2);
+    canvas.drawPath(dashPath(horizontalGuide, dashArray: dashArray), gridPaint);
+
+    final verticalGuide = Path()
+      ..moveTo(size.width / 2, 0)
+      ..lineTo(size.width / 2, size.height);
+    canvas.drawPath(dashPath(verticalGuide, dashArray: dashArray), gridPaint);
 
     final progressPerStroke = originalPaths.isEmpty ? 1.0 : 1 / originalPaths.length;
     final paint = Paint()
