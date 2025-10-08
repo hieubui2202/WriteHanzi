@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:myapp/src/features/auth/services/auth_service.dart';
 import 'package:myapp/src/features/auth/services/progress_service.dart';
+import 'package:myapp/src/features/practice/practice_payload.dart';
 import 'package:myapp/src/models/hanzi_character.dart';
 import 'package:myapp/src/models/unit.dart';
 import 'package:myapp/src/models/user_profile.dart';
@@ -88,8 +89,8 @@ class UnitDetailsScreen extends StatelessWidget {
                               character: character,
                               isCompleted: isCompleted,
                               onTap: () => context.go(
-                                '/unit/${unit.id}/write/${character.id}',
-                                extra: character,
+                                '/unit/${unit.id}/practice/${character.id}',
+                                extra: PracticePayload(unit: unit, character: character),
                               ),
                             );
                           },
