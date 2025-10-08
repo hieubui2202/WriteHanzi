@@ -2,12 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../models/unit.dart';
-import '../../../models/hanzi_character.dart';
-import '../../../models/user_profile.dart';
-import '../../../repositories/character_repository.dart';
-import '../../../features/auth/services/auth_service.dart';
-import '../../../features/auth/services/progress_service.dart';
+import 'package:myapp/src/features/auth/services/auth_service.dart';
+import 'package:myapp/src/features/auth/services/progress_service.dart';
+import 'package:myapp/src/models/hanzi_character.dart';
+import 'package:myapp/src/models/unit.dart';
+import 'package:myapp/src/models/user_profile.dart';
+import 'package:myapp/src/repositories/character_repository.dart';
 
 class UnitDetailsScreen extends StatelessWidget {
   final Unit unit;

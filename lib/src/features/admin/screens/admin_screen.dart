@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../models/hanzi_character.dart';
-import '../../../models/unit.dart';
-import '../../../repositories/character_repository.dart';
-import '../../../repositories/unit_repository.dart';
+import 'package:myapp/src/models/hanzi_character.dart';
+import 'package:myapp/src/models/unit.dart';
+import 'package:myapp/src/repositories/character_repository.dart';
+import 'package:myapp/src/repositories/unit_repository.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -14,6 +14,12 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> {
   bool _isLoading = false;
   final _tsvController = TextEditingController();
+
+  @override
+  void dispose() {
+    _tsvController.dispose();
+    super.dispose();
+  }
 
   Future<void> _seedData() async {
     setState(() {

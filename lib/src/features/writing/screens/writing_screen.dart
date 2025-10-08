@@ -1,11 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../models/hanzi_character.dart';
-import '../../../features/auth/services/progress_service.dart';
-import '../providers/drawing_provider.dart';
-import '../widgets/character_overlay.dart';
-import '../widgets/writing_pad.dart';
+import 'package:myapp/src/features/auth/services/progress_service.dart';
+import 'package:myapp/src/features/writing/providers/drawing_provider.dart';
+import 'package:myapp/src/features/writing/widgets/character_overlay.dart';
+import 'package:myapp/src/features/writing/widgets/writing_pad.dart';
+import 'package:myapp/src/models/hanzi_character.dart';
 
 class WritingScreen extends StatelessWidget {
   final HanziCharacter character;
@@ -44,11 +44,11 @@ class WritingScreen extends StatelessWidget {
           children: [
             Expanded(
               child: Container(
-                 margin: const EdgeInsets.all(16.0),
-                 decoration: BoxDecoration(
-                   border: Border.all(color: Colors.grey.shade300, width: 2.0),
-                   borderRadius: BorderRadius.circular(12.0),
-                 ),
+                margin: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300, width: 2.0),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
                 child: Stack(
                   children: [
                     CharacterOverlay(character: character.hanzi),

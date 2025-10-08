@@ -90,7 +90,7 @@ class AuthService with ChangeNotifier {
     }
   }
 
-    Future<User?> signInWithEmailAndPassword(String email, String password) async {
+  Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
       final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -149,6 +149,9 @@ class AuthService with ChangeNotifier {
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+    _user = null;
+    _userProfile = null;
+    notifyListeners();
   }
 
   Stream<UserProfile?> get userProfileStream {

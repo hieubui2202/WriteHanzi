@@ -99,13 +99,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late final GoRouter _router;
+  GoRouter? _router;
 
   @override
-  void initState() {
-    super.initState();
-    final authService = Provider.of<AuthService>(context, listen: false);
-    _router = AppRouter(authService).router;
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _router ??= AppRouter(Provider.of<AuthService>(context, listen: false)).router;
   }
 
   @override
@@ -134,6 +133,10 @@ class _MyAppState extends State<MyApp> {
       textTheme: appTextTheme,
     );
 
+    if (_router == null) {
+      return const SizedBox.shrink();
+    }
+
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp.router(
@@ -141,7 +144,7 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
-          routerConfig: _router,
+          routerConfig: _router!,
         );
       },
     );

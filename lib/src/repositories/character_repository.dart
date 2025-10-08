@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/hanzi_character.dart';
+import 'package:myapp/src/models/hanzi_character.dart';
 
 class CharacterRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final CollectionReference _charactersCollection = FirebaseFirestore.instance.collection('characters');
+  final CollectionReference _charactersCollection =
+      FirebaseFirestore.instance.collection('characters');
 
   Stream<List<HanziCharacter>> getCharactersForUnit(String unitId) {
     return _charactersCollection.where('unitId', isEqualTo: unitId).snapshots().map((snapshot) {
@@ -13,7 +14,7 @@ class CharacterRepository {
     });
   }
 
-   // Admin function to add a character
+  // Admin function to add a character
   Future<void> addCharacter(HanziCharacter character) {
     return _charactersCollection.doc(character.hanzi).set(character.toJson());
   }

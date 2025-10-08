@@ -71,8 +71,8 @@ class _CanvasPainter extends CustomPainter {
         if (stroke[i] != null && stroke[i + 1] != null) {
           canvas.drawLine(stroke[i]!, stroke[i + 1]!, paint);
         } else if (stroke[i] != null && stroke[i + 1] == null) {
-          canvas.drawPoints(PointMode.points, [stroke[i]!], paint..strokeWidth = 8.0 );
-        } 
+          canvas.drawPoints(PointMode.points, [stroke[i]!], paint..strokeWidth = 8.0);
+        }
       }
     }
   }

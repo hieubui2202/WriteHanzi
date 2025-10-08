@@ -19,12 +19,11 @@ class DrawingProvider with ChangeNotifier {
 
   void endLine() {
     if (_lines.isNotEmpty && _lines.last.isNotEmpty) {
-        // Add a null to signify the end of a line segment
-        _lines.last.add(null);
-        notifyListeners();
+      // Add a null to signify the end of a line segment
+      _lines.last.add(null);
+      notifyListeners();
     }
-}
-
+  }
 
   void undo() {
     if (_lines.isNotEmpty) {

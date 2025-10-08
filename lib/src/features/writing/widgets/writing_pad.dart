@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/drawing_provider.dart';
+import 'package:myapp/src/features/writing/providers/drawing_provider.dart';
 
 class WritingPad extends StatelessWidget {
   const WritingPad({super.key});
@@ -17,7 +17,7 @@ class WritingPad extends StatelessWidget {
       onPanUpdate: (details) {
         drawingProvider.updateLine(details.localPosition);
       },
-       onPanEnd: (details) {
+      onPanEnd: (details) {
         drawingProvider.endLine();
       },
       child: CustomPaint(

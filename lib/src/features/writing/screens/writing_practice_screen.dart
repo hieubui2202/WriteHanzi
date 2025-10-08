@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../models/hanzi_character.dart';
-import '../logic/writing_recognizer.dart';
-import '../widgets/writing_canvas.dart';
+import 'package:myapp/src/features/writing/logic/writing_recognizer.dart';
+import 'package:myapp/src/features/writing/widgets/writing_canvas.dart';
+import 'package:myapp/src/models/hanzi_character.dart';
 
 class WritingPracticeScreen extends StatefulWidget {
   final HanziCharacter character;
