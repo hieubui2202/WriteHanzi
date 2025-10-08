@@ -11,7 +11,6 @@ plugins {
 android {
     namespace = "com.example.myapp"
     compileSdk = flutter.compileSdkVersion
-    // Align the NDK version with the Firebase and Google plugins requirements.
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -26,7 +25,6 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.myapp"
-        // Firebase plugins require at least Android SDK 23.
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
