@@ -46,13 +46,18 @@ class _MissingStrokePadState extends State<MissingStrokePad> {
             child: SizedBox(
               width: canvasSize.width,
               height: canvasSize.height,
-              child: CustomPaint(
-                painter: _MissingStrokePainter(
-                  strokes: controller.strokes,
-                  hintPaths: hintPaths,
-                  strokeData: targetData,
-                ),
-              ),
+              child: Obx(() {
+                final strokes = controller.strokes
+                    .map((stroke) => List<Offset>.from(stroke))
+                    .toList(growable: false);
+                return CustomPaint(
+                  painter: _MissingStrokePainter(
+                    strokes: strokes,
+                    hintPaths: hintPaths,
+                    strokeData: targetData,
+                  ),
+                );
+              }),
             ),
           ),
         );

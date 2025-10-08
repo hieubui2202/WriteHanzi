@@ -37,19 +37,26 @@ class AppBindings extends Bindings {
           cache: Get.find<ProgressCache>(),
         ));
 
-    Get.put<AuthController>(AuthController(Get.find<FirebaseAuth>()));
-    Get.put<ProgressController>(ProgressController(
-      unitRepository: Get.find<UnitRepository>(),
-      characterRepository: Get.find<CharacterRepository>(),
-      progressRepository: Get.find<ProgressRepository>(),
-      authController: Get.find<AuthController>(),
-    ), permanent: true);
+    final authController = Get.put<AuthController>(
+      AuthController(Get.find<FirebaseAuth>()),
+    );
+    final progressController = Get.put<ProgressController>(
+      ProgressController(
+        unitRepository: Get.find<UnitRepository>(),
+        characterRepository: Get.find<CharacterRepository>(),
+        progressRepository: Get.find<ProgressRepository>(),
+        authController: authController,
+      ),
+      permanent: true,
+    );
+    authController.attachProgressController(progressController);
+
     Get.put<PracticeController>(PracticeController(
       audioService: Get.find<AudioService>(),
-      progressController: Get.find<ProgressController>(),
+      progressController: progressController,
     ));
     Get.put<ReviewController>(ReviewController(
-      progressController: Get.find<ProgressController>(),
+      progressController: progressController,
     ));
     Get.put<WritingSessionController>(WritingSessionController());
   }

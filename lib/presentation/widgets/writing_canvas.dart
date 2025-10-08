@@ -37,12 +37,17 @@ class _WritingCanvasState extends State<WritingCanvas> {
             child: SizedBox(
               width: canvasSize.width,
               height: canvasSize.height,
-              child: CustomPaint(
-                painter: _WritingPainter(
-                  strokes: controller.strokes,
-                  strokeData: widget.strokeData,
-                ),
-              ),
+              child: Obx(() {
+                final strokes = controller.strokes
+                    .map((stroke) => List<Offset>.from(stroke))
+                    .toList(growable: false);
+                return CustomPaint(
+                  painter: _WritingPainter(
+                    strokes: strokes,
+                    strokeData: widget.strokeData,
+                  ),
+                );
+              }),
             ),
           ),
         );

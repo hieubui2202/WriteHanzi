@@ -30,6 +30,7 @@ Future<void> main() async {
   FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
   final prefs = await SharedPreferences.getInstance();
   Get.put<ProgressCache>(ProgressCache(prefs), permanent: true);
+  Get.put(SettingsController(), permanent: true);
   runApp(const WriteHanziApp());
 }
 
@@ -38,7 +39,7 @@ class WriteHanziApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = Get.put(SettingsController(), permanent: true);
+    final settings = Get.find<SettingsController>();
     return Obx(() {
       final localeParts = settings.localeCode.value.split('_');
       final locale = Locale(localeParts[0], localeParts.length > 1 ? localeParts[1] : null);

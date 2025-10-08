@@ -20,6 +20,7 @@ class WritingSessionController extends GetxController {
 
   void start() {
     strokes.clear();
+    strokes.refresh();
     passed.value = false;
   }
 
@@ -34,6 +35,7 @@ class WritingSessionController extends GetxController {
 
   void startStroke(Offset point) {
     strokes.add([point]);
+    strokes.refresh();
   }
 
   void endStroke() {}
@@ -41,11 +43,13 @@ class WritingSessionController extends GetxController {
   void undo() {
     if (strokes.isNotEmpty) {
       strokes.removeLast();
+      strokes.refresh();
     }
   }
 
   void clear() {
     strokes.clear();
+    strokes.refresh();
   }
 
   bool evaluateWith(StrokeData data) {

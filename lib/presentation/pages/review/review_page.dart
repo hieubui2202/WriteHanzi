@@ -33,7 +33,7 @@ class _ReviewPageState extends State<ReviewPage> {
       body: Obx(() {
         final current = controller.current;
         if (current == null) {
-          return const Center(child: Text('No mastered characters yet.'));
+          return Center(child: Text('no_mastered'.tr));
         }
         return GestureDetector(
           onTap: controller.flip,
@@ -59,6 +59,8 @@ class _ReviewPageState extends State<ReviewPage> {
                           style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 160),
                         ),
                 ),
+                const SizedBox(height: 12),
+                Text('tap_to_flip'.tr),
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: controller.next,

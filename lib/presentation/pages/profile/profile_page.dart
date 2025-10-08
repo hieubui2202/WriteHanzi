@@ -18,6 +18,11 @@ class ProfilePage extends StatelessWidget {
     final progressController = Get.find<ProgressController>();
     final authController = Get.find<AuthController>();
     final profile = progressController.userProfile.value;
+    final displayName = profile?.displayName ?? 'guest_user'.tr;
+    final trimmedName = displayName.trim();
+    final avatarLetter = trimmedName.isNotEmpty ? trimmedName[0].toUpperCase() : '?';
+    final xpText = 'xp_label'.trParams({'xp': (profile?.xp ?? 0).toString()});
+    final streakText = 'streak_label'.trParams({'streak': (profile?.streakDays ?? 0).toString()});
     return Scaffold(
       appBar: AppBar(title: Text('profile'.tr)),
       body: Padding(
@@ -29,26 +34,26 @@ class ProfilePage extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  child: Text(profile?.displayName?.substring(0, 1).toUpperCase() ?? '?'),
+                  child: Text(avatarLetter),
                 ),
                 const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(profile?.displayName ?? 'Guest', style: Theme.of(context).textTheme.titleLarge),
+                    Text(displayName, style: Theme.of(context).textTheme.titleLarge),
                     if (profile?.email != null) Text(profile!.email!),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            Text('XP: ${profile?.xp ?? 0}', style: Theme.of(context).textTheme.titleMedium),
+            Text(xpText, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            Text('Streak: ${profile?.streakDays ?? 0}'),
+            Text(streakText),
             const Spacer(),
             ElevatedButton(
               onPressed: authController.signOut,
-              child: const Text('Sign out'),
+              child: Text('sign_out'.tr),
             ),
           ],
         ),

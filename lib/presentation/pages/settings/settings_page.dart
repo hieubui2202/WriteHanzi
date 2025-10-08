@@ -25,10 +25,10 @@ class SettingsPage extends StatelessWidget {
             Obx(() => SwitchListTile(
                   value: controller.soundEnabled.value,
                   onChanged: controller.toggleSound,
-                  title: const Text('Sound Effects'),
+                  title: Text('sound_effects'.tr),
                 )),
             const SizedBox(height: 12),
-            Text('Language', style: Theme.of(context).textTheme.titleMedium),
+            Text('language'.tr, style: Theme.of(context).textTheme.titleMedium),
             Obx(() => DropdownButton<String>(
                   value: controller.localeCode.value,
                   items: const [

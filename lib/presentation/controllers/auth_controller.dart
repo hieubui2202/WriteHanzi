@@ -12,6 +12,15 @@ class AuthController extends GetxController {
 
   final Rx<User?> firebaseUser = Rx<User?>(null);
   final RxBool loading = false.obs;
+  ProgressController? _progressController;
+
+  void attachProgressController(ProgressController controller) {
+    _progressController = controller;
+    final user = firebaseUser.value;
+    if (user != null) {
+      controller.bootstrap();
+    }
+  }
 
   @override
   void onReady() {
@@ -20,7 +29,7 @@ class AuthController extends GetxController {
       if (user == null) {
         Get.offAllNamed(AppRoutes.auth);
       } else {
-        Get.find<ProgressController>().bootstrap();
+        _progressController?.bootstrap();
         Get.offAllNamed(AppRoutes.home);
       }
     });
