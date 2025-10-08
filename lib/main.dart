@@ -111,7 +111,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     const Color primarySeedColor = Colors.teal;
     final TextTheme appTextTheme = TextTheme(
-      displayLarge: GoogleFonts.notoSansSc(fontSize: 57, fontWeight: FontWeight.bold),
+      displayLarge: GoogleFonts.notoSans(fontSize: 57, fontWeight: FontWeight.bold),
       titleLarge: GoogleFonts.roboto(fontSize: 22, fontWeight: FontWeight.w500),
       bodyMedium: GoogleFonts.openSans(fontSize: 14),
     );
@@ -123,7 +123,7 @@ class _MyAppState extends State<MyApp> {
       appBarTheme: AppBarTheme(
         backgroundColor: primarySeedColor,
         foregroundColor: Colors.white,
-        titleTextStyle: GoogleFonts.notoSansSc(fontSize: 24, fontWeight: FontWeight.bold),
+        titleTextStyle: GoogleFonts.notoSans(fontSize: 24, fontWeight: FontWeight.bold),
       ),
     );
 
