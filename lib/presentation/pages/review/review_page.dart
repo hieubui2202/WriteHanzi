@@ -7,7 +7,7 @@ import '../splash/routes.dart';
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.review,
     page: ReviewPage.new,
   );

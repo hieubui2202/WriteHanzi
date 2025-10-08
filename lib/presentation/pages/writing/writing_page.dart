@@ -9,7 +9,7 @@ import '../splash/routes.dart';
 class WritingPage extends StatelessWidget {
   const WritingPage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.writing,
     page: WritingPage.new,
   );

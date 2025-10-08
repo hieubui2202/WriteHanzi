@@ -8,7 +8,7 @@ import '../splash/routes.dart';
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.profile,
     page: ProfilePage.new,
   );

@@ -8,7 +8,7 @@ import '../splash/routes.dart';
 class StrokeDemoPage extends StatelessWidget {
   const StrokeDemoPage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.strokeDemo,
     page: StrokeDemoPage.new,
   );

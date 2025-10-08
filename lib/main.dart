@@ -50,7 +50,7 @@ class WriteHanziApp extends StatelessWidget {
         fallbackLocale: const Locale('vi', 'VN'),
         initialBinding: AppBindings(),
         initialRoute: AppRoutes.splash,
-        getPages: const [
+        getPages: [
           SplashPage.route,
           AuthPage.route,
           HomePage.route,

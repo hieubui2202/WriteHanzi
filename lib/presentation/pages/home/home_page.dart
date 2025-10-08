@@ -10,7 +10,7 @@ import '../../pages/splash/routes.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.home,
     page: HomePage.new,
   );

@@ -8,7 +8,7 @@ import '../splash/routes.dart';
 class LessonIntroPage extends StatelessWidget {
   const LessonIntroPage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.lessonIntro,
     page: LessonIntroPage.new,
   );

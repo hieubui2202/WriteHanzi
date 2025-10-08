@@ -7,7 +7,7 @@ import '../splash/routes.dart';
 class AuthPage extends StatelessWidget {
   const AuthPage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.auth,
     page: AuthPage.new,
   );

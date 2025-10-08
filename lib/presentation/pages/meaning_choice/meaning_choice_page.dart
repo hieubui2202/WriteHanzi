@@ -11,7 +11,7 @@ import '../splash/routes.dart';
 class MeaningChoicePage extends StatelessWidget {
   const MeaningChoicePage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.meaningChoice,
     page: MeaningChoicePage.new,
   );

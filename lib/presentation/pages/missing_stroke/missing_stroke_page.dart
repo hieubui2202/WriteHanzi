@@ -3,14 +3,14 @@ import 'package:get/get.dart';
 
 import '../../controllers/practice_controller.dart';
 import '../../controllers/writing_session_controller.dart';
-import '../../domain/entities/stroke_data.dart';
+import '../../../domain/entities/stroke_data.dart';
 import '../../widgets/missing_stroke_pad.dart';
 import '../splash/routes.dart';
 
 class MissingStrokePage extends StatelessWidget {
   const MissingStrokePage({super.key});
 
-  static const route = GetPage(
+  static final route = GetPage(
     name: AppRoutes.missingStroke,
     page: MissingStrokePage.new,
   );

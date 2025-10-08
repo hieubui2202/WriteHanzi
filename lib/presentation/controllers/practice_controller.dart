@@ -43,7 +43,7 @@ class PracticeController extends GetxController {
 
   PracticeStep get step => PracticeStep.values[stepIndex.value];
 
-  final List<GetPage<dynamic>> pages = const [
+  final List<GetPage<dynamic>> pages = [
     LessonIntroPage.route,
     MeaningChoicePage.route,
     StrokeDemoPage.route,
@@ -119,7 +119,7 @@ class PracticeController extends GetxController {
     final character = currentCharacter.value;
     if (unit == null || character == null) return;
     final passed = meaningCorrect.value && writingPassed.value && missingStrokePassed.value;
-    final score = passed ? 1.0 : max(0, 1 - mistakes.value * 0.2);
+    final score = passed ? 1.0 : max(0.0, 1 - mistakes.value * 0.2);
     await progressController.updateProgress(
       unit: unit,
       character: character,
