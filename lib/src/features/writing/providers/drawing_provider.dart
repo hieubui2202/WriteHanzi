@@ -5,6 +5,9 @@ class DrawingProvider with ChangeNotifier {
   final List<List<Offset?>> _lines = [];
   List<List<Offset?>> get lines => _lines;
 
+  bool get hasStrokes => _lines.any((line) => line.isNotEmpty);
+  bool get canUndo => _lines.isNotEmpty;
+
   void startLine(Offset startPoint) {
     _lines.add([startPoint]);
     notifyListeners();
@@ -26,14 +29,16 @@ class DrawingProvider with ChangeNotifier {
   }
 
   void undo() {
-    if (_lines.isNotEmpty) {
+    if (canUndo) {
       _lines.removeLast();
       notifyListeners();
     }
   }
 
   void clear() {
-    _lines.clear();
-    notifyListeners();
+    if (_lines.isNotEmpty) {
+      _lines.clear();
+      notifyListeners();
+    }
   }
 }
