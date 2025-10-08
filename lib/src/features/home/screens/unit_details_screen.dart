@@ -24,7 +24,7 @@ class UnitDetailsScreen extends StatelessWidget {
         title: Text(unit.title),
       ),
       body: StreamBuilder<List<HanziCharacter>>(
-        stream: CharacterRepository().getCharactersForUnit(unit.id),
+        stream: CharacterRepository().getCharactersForUnit(unit.id, fallbackIds: unit.characters),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
