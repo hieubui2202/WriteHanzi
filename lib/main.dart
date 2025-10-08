@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:myapp/src/core/routing/app_router.dart';
+
 import 'package:myapp/src/features/auth/services/auth_service.dart';
 
 import 'firebase_options.dart';
@@ -89,8 +91,22 @@ class ThemeProvider with ChangeNotifier {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    final authService = Provider.of<AuthService>(context, listen: false);
+    _router = AppRouter(authService).router;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,141 +148,3 @@ class MyApp extends StatelessWidget {
   }
 }
 
-final GoRouter _router = GoRouter(
-  routes: <RouteBase>[
-    GoRoute(
-      path: '/',
-      builder: (BuildContext context, GoRouterState state) => const HomeScreen(),
-      routes: <RouteBase>[
-        GoRoute(
-          path: 'unit/:unitId',
-          builder: (BuildContext context, GoRouterState state) {
-            final String unitId = state.pathParameters['unitId']!;
-            return UnitScreen(unitId: unitId);
-          },
-        ),
-      ],
-    ),
-  ],
-);
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('HanziMaster'),
-        actions: [
-          IconButton(
-            icon: Icon(themeProvider.themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode),
-            onPressed: () => themeProvider.toggleTheme(),
-            tooltip: 'Toggle Theme',
-          ),
-        ],
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('units').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return const Center(child: Text('Something went wrong'));
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-
-          final units = snapshot.data!.docs;
-          return ListView.builder(
-            itemCount: units.length,
-            itemBuilder: (context, index) {
-              final unit = units[index];
-              // Safely access data
-              final data = unit.data() as Map<String, dynamic>? ?? {};
-              final unitName = data['unitName'] as String? ?? 'Unnamed Unit';
-              final unitId = unit.id;
-              
-              return ListTile(
-                title: Text(unitName, style: Theme.of(context).textTheme.titleLarge),
-                onTap: () => context.go('/unit/$unitId'),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-class UnitScreen extends StatelessWidget {
-  final String unitId;
-  const UnitScreen({super.key, required this.unitId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Unit: $unitId')),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('units').doc(unitId).get(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) return const Center(child: Text('Something went wrong'));
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (!snapshot.hasData || !snapshot.data!.exists) return const Center(child: Text("Unit not found."));
-
-          final unitData = snapshot.data!.data() as Map<String, dynamic>;
-          final characterIds = List<String>.from(unitData['characters'] ?? []);
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(16.0),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3, crossAxisSpacing: 16.0, mainAxisSpacing: 16.0, childAspectRatio: 1.0),
-            itemCount: characterIds.length,
-            itemBuilder: (context, index) {
-              final charId = characterIds[index];
-              return CharacterCard(characterId: charId);
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-class CharacterCard extends StatelessWidget {
-  final String characterId;
-  const CharacterCard({super.key, required this.characterId});
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('characters').doc(characterId).get(),
-      builder: (context, snapshot) {
-        // CORRECT, ROBUST CHECKING
-        if (snapshot.hasError) return const Card(child: Center(child: Icon(Icons.error)));
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Card(child: Center(child: CircularProgressIndicator()));
-        }
-        if (!snapshot.hasData || !snapshot.data!.exists) {
-          return const Card(child: Center(child: Text('?')));
-        }
-        
-        // This is now safe
-        final characterData = snapshot.data!.data() as Map<String, dynamic>;
-        final meaning = characterData['meaning'] as String? ?? '';
-
-        return Card(
-          elevation: 4.0,
-          child: InkWell(
-            onTap: () { /* Handle card tap */ },
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(characterId, style: Theme.of(context).textTheme.displayLarge),
-                  Text(meaning, style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
