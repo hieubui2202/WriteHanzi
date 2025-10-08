@@ -162,7 +162,7 @@ class _UnitCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final statusColor = _statusColor(colorScheme);
     final completionRatio = progress.total == 0
-        ? 0
+        ? 0.0
         : progress.completed / progress.total;
 
     return InkWell(

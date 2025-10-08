@@ -112,21 +112,22 @@ class WritingScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
-        onPressed: () async {
-          // Award 10 XP for each character completion
-          await progressService.completeCharacter(character.id, 10);
+          onPressed: () async {
+            // Award 10 XP for each character completion
+            await progressService.completeCharacter(character.id, 10);
 
-          // Show a confirmation dialog
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Tiến độ đã được lưu!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+            // Show a confirmation dialog
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Tiến độ đã được lưu!'),
+                backgroundColor: Colors.green,
+              ),
+            );
 
-          // Pop the screen
-          Navigator.of(context).pop();
-        },
+            // Pop the screen
+            Navigator.of(context).pop();
+          },
+        ),
       ),
     );
   }
