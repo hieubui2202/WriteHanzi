@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/src/models/user_profile.dart';
 
@@ -70,10 +71,23 @@ class AuthService with ChangeNotifier {
 
   Future<UserProfile> _getOrCreateUserProfile(User user) async {
     final dbRef = _database.ref('users/${user.uid}');
-    final snapshot = await dbRef.get();
+    debugPrint('Fetching profile for user: ${user.uid}');
+
+    DataSnapshot snapshot;
+    try {
+      snapshot = await dbRef.get();
+      debugPrint('Realtime Database get() succeeded for ${user.uid}.');
+    } on MissingPluginException catch (e) {
+      debugPrint(
+        'Realtime Database get() missing on this platform, falling back to once(): $e',
+      );
+      final event = await dbRef.once(DatabaseEventType.value);
+      snapshot = event.snapshot;
+    }
 
     if (snapshot.exists && snapshot.value != null) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
+      debugPrint('Profile loaded from database for ${user.uid}.');
       return UserProfile.fromMap(data, user.uid);
     } else {
       final newUserProfile = UserProfile(
@@ -86,6 +100,7 @@ class AuthService with ChangeNotifier {
         progress: {},
       );
       await dbRef.set(newUserProfile.toMap());
+      debugPrint('Created default profile for ${user.uid}.');
       return newUserProfile;
     }
   }
