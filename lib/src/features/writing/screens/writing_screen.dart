@@ -65,7 +65,7 @@ class WritingScreen extends StatelessWidget {
   }
 
   Widget _buildCompletionButton(BuildContext context) {
-    final progressService = Provider.of<ProgressService>(context, listen: false);
+    final progressService = ProgressService();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),

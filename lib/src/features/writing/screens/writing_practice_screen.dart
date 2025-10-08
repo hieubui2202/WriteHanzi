@@ -13,12 +13,12 @@ class WritingPracticeScreen extends StatefulWidget {
 }
 
 class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
-  final GlobalKey<_WritingCanvasState> _canvasKey = GlobalKey<_WritingCanvasState>();
+  final GlobalKey<WritingCanvasState> _canvasKey = GlobalKey<WritingCanvasState>();
 
   void _checkWriting() {
-    final userStrokes = _canvasKey.currentState?._strokes;
-    if (userStrokes != null) {
-      final score = WritingRecognizer.calculateScore(userStrokes, widget.character.strokeData);
+    final strokes = _canvasKey.currentState?.strokes;
+    if (strokes != null) {
+      final score = WritingRecognizer.calculateScore(strokes, widget.character.strokeData);
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -37,12 +37,8 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
     }
   }
 
-   void _undoStroke() {
-    if (_canvasKey.currentState!._strokes.isNotEmpty) {
-      setState(() {
-         _canvasKey.currentState!._strokes.removeLast();
-      });
-    }
+  void _undoStroke() {
+    _canvasKey.currentState?.undo();
   }
 
   @override
@@ -54,7 +50,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
           IconButton(
             icon: const Icon(Icons.clear),
             onPressed: () {
-              _canvasKey.currentState?._clearCanvas();
+              _canvasKey.currentState?.clearCanvas();
             },
             tooltip: 'Clear Canvas',
           ),
@@ -79,10 +75,12 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
                   borderRadius: BorderRadius.circular(8.0),
                   // Add a faint background of the character
                   image: DecorationImage(
-                    image: NetworkImage('https://raw.githubusercontent.com/skishore/makemeahanzi/master/graphics/${widget.character.hanzi}.png'),
+                    image: NetworkImage(
+                      'https://raw.githubusercontent.com/skishore/makemeahanzi/master/graphics/${widget.character.hanzi}.png',
+                    ),
                     fit: BoxFit.contain,
                     colorFilter: ColorFilter.mode(Colors.grey.withOpacity(0.2), BlendMode.dstIn),
-                  )
+                  ),
                 ),
                 child: WritingCanvas(key: _canvasKey),
               ),

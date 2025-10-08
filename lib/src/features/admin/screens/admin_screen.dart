@@ -102,22 +102,29 @@ class _AdminScreenState extends State<AdminScreen> {
 
     try {
       final charRepo = CharacterRepository();
-      final tsvData = _tsvController.text;
-      final lines = tsvData.split('
-');
+      final tsvData = _tsvController.text.trim();
+      if (tsvData.isEmpty) {
+        return;
+      }
 
-      for (final line in lines) {
+      final lines = tsvData.split('\n');
+      for (final rawLine in lines) {
+        final line = rawLine.trim();
         if (line.isEmpty) continue;
 
-        final parts = line.split('	');
+        final parts = line.split('\t');
+        if (parts.length < 10) {
+          continue;
+        }
+
         final character = HanziCharacter(
           hanzi: parts[0],
           pinyin: parts[5],
           meaning: parts[4],
           unitId: parts[1],
           strokeData: StrokeData(
-            width: int.parse(parts[7]),
-            height: int.parse(parts[8]),
+            width: int.tryParse(parts[7]) ?? 0,
+            height: int.tryParse(parts[8]) ?? 0,
             paths: parts[9].split('|'),
           ),
         );
@@ -143,7 +150,6 @@ class _AdminScreenState extends State<AdminScreen> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

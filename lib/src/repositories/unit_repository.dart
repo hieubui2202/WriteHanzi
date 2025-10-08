@@ -7,7 +7,10 @@ class UnitRepository {
 
   Stream<List<Unit>> getUnits() {
     return _unitsCollection.orderBy('order').snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Unit.fromJson(doc.data() as Map<String, dynamic>)).toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Unit.fromJson({...data, 'id': doc.id});
+      }).toList();
     });
   }
 

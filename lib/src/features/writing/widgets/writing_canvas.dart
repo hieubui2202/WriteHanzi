@@ -1,19 +1,31 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 class WritingCanvas extends StatefulWidget {
   const WritingCanvas({super.key});
 
   @override
-  State<WritingCanvas> createState() => _WritingCanvasState();
+  WritingCanvasState createState() => WritingCanvasState();
 }
 
-class _WritingCanvasState extends State<WritingCanvas> {
+class WritingCanvasState extends State<WritingCanvas> {
   List<List<Offset?>> _strokes = [];
 
-  void _clearCanvas() {
+  List<List<Offset?>> get strokes => _strokes;
+
+  void clearCanvas() {
     setState(() {
       _strokes = [];
     });
+  }
+
+  void undo() {
+    if (_strokes.isNotEmpty) {
+      setState(() {
+        _strokes.removeLast();
+      });
+    }
   }
 
   @override
@@ -31,12 +43,12 @@ class _WritingCanvasState extends State<WritingCanvas> {
       },
       onPanEnd: (details) {
         setState(() {
-           _strokes.last.add(null); // End of a stroke
+          _strokes.last.add(null); // End of a stroke
         });
       },
       child: CustomPaint(
         painter: _CanvasPainter(_strokes),
-        child: Container(), // The canvas needs a size
+        child: const SizedBox.expand(),
       ),
     );
   }

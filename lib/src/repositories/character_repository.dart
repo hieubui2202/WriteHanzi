@@ -7,7 +7,9 @@ class CharacterRepository {
 
   Stream<List<HanziCharacter>> getCharactersForUnit(String unitId) {
     return _charactersCollection.where('unitId', isEqualTo: unitId).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => HanziCharacter.fromJson(doc.data() as Map<String, dynamic>)).toList();
+      return snapshot.docs
+          .map((doc) => HanziCharacter.fromJson(doc.data() as Map<String, dynamic>).copyWithId(doc.id))
+          .toList();
     });
   }
 
