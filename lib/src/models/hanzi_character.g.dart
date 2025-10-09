@@ -25,7 +25,7 @@ Map<String, dynamic> _$HanziCharacterToJson(HanziCharacter instance) =>
       'meaning': instance.meaning,
       'unitId': instance.unitId,
       'ttsUrl': instance.ttsUrl,
-      'strokeData': instance.strokeData,
+      'strokeData': instance.strokeData.toJson(),
     };
 
 StrokeData _$StrokeDataFromJson(Map<String, dynamic> json) => StrokeData(

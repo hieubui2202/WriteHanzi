@@ -54,7 +54,7 @@ class UserProfileHeader extends StatelessWidget {
                     ),
                      const SizedBox(height: 2),
                     Text(
-                      userProfile.email ?? 'Người dùng ẩn danh',
+                      userProfile.email,
                       style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                       overflow: TextOverflow.ellipsis,
                     ),
