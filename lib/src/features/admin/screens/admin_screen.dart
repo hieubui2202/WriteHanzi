@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:myapp/src/models/hanzi_character.dart';
 import 'package:myapp/src/models/unit.dart';
@@ -145,33 +146,97 @@ class _AdminScreenState extends State<AdminScreen> {
 
     try {
       final charRepo = CharacterRepository();
+      final unitRepo = UnitRepository();
       final tsvData = _tsvController.text.trim();
       if (tsvData.isEmpty) {
         return;
       }
 
+      final unitCharacters = <String, Set<String>>{};
+      final unitTitles = <String, String>{};
+      final unitOrders = <String, int>{};
+
       final lines = tsvData.split('\n');
       for (final rawLine in lines) {
         final line = rawLine.trim();
-        if (line.isEmpty) continue;
-
-        final parts = line.split('\t');
-        if (parts.length < 10) {
+        if (line.isEmpty) {
           continue;
         }
 
+        final parts = line.split('\t');
+        if (parts.length < 10) {
+          debugPrint('Skipping malformed TSV row: ' + line);
+          continue;
+        }
+
+        if (parts[0].trim().toLowerCase() == 'character') {
+          // Skip header row.
+          continue;
+        }
+
+        final hanzi = parts[0].trim();
+        if (hanzi.isEmpty) {
+          continue;
+        }
+
+        final rawSectionId = parts[1].trim();
+        final sectionTitle = parts[2].trim();
+        final meaning = parts[4].trim();
+        final pinyin = parts[5].trim();
+        final ttsUrl = parts.length > 6 ? parts[6].trim() : null;
+        final strokeWidth = parts.length > 7 ? int.tryParse(parts[7].trim()) : null;
+        final strokeHeight = parts.length > 8 ? int.tryParse(parts[8].trim()) : null;
+        final strokePaths = parts[9]
+            .split('|')
+            .map((segment) => segment.trim())
+            .where((segment) => segment.isNotEmpty)
+            .toList();
+
+        final unitId = _buildUnitId(rawSectionId, sectionTitle);
+
         final character = HanziCharacter(
-          hanzi: parts[0],
-          pinyin: parts[5],
-          meaning: parts[4],
-          unitId: parts[1],
+          hanzi: hanzi,
+          pinyin: pinyin.isNotEmpty ? pinyin : hanzi,
+          meaning: meaning.isNotEmpty ? meaning : hanzi,
+          unitId: unitId,
+          ttsUrl: ttsUrl != null && ttsUrl.isNotEmpty ? ttsUrl : null,
           strokeData: StrokeData(
-            width: int.tryParse(parts[7]) ?? 0,
-            height: int.tryParse(parts[8]) ?? 0,
-            paths: parts[9].split('|'),
+            width: strokeWidth ?? 109,
+            height: strokeHeight ?? 109,
+            paths: strokePaths,
           ),
         );
         await charRepo.addCharacter(character);
+
+        final characterSet = unitCharacters.putIfAbsent(unitId, () => <String>{});
+        characterSet.add(character.hanzi);
+
+        if (sectionTitle.isNotEmpty) {
+          unitTitles[unitId] = sectionTitle;
+        }
+
+        final numericOrder = int.tryParse(rawSectionId);
+        if (numericOrder != null) {
+          unitOrders[unitId] = numericOrder;
+        }
+      }
+
+      for (final entry in unitCharacters.entries) {
+        final unitId = entry.key;
+        final characters = entry.value.toList()..sort();
+        final title = unitTitles[unitId] ?? unitId;
+        final order = unitOrders[unitId] ?? 0;
+        final xpReward = (characters.length * 10).clamp(20, 200).toInt();
+
+        final unit = Unit(
+          id: unitId,
+          title: title,
+          description: '',
+          order: order,
+          characters: characters,
+          xpReward: xpReward,
+        );
+        await unitRepo.addUnit(unit);
       }
 
       if (mounted) {
@@ -182,7 +247,7 @@ class _AdminScreenState extends State<AdminScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error importing TSV data: $e')),
+          SnackBar(content: Text('Error importing TSV data: ' + e.toString())),
         );
       }
     } finally {
@@ -193,6 +258,35 @@ class _AdminScreenState extends State<AdminScreen> {
       }
     }
   }
+
+  String _buildUnitId(String rawSectionId, String sectionTitle) {
+    final cleanedSectionId = rawSectionId.trim();
+    if (cleanedSectionId.isNotEmpty) {
+      final normalized = cleanedSectionId
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9_-]+'), '_')
+          .replaceAll(RegExp('_+'), '_')
+          .replaceAll(RegExp(r'^_+|_+$'), '');
+      if (normalized.isNotEmpty) {
+        return normalized.startsWith('unit_') ? normalized : 'unit_' + normalized;
+      }
+    }
+
+    final cleanedTitle = sectionTitle.trim();
+    if (cleanedTitle.isNotEmpty) {
+      final normalizedTitle = cleanedTitle
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+          .replaceAll(RegExp('_+'), '_')
+          .replaceAll(RegExp(r'^_+|_+$'), '');
+      if (normalizedTitle.isNotEmpty) {
+        return 'unit_' + normalizedTitle;
+      }
+    }
+
+    return 'unit_' + DateTime.now().millisecondsSinceEpoch.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,6 +310,9 @@ class _AdminScreenState extends State<AdminScreen> {
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Paste TSV Data Here',
+                helperText:
+                    'Columns: Character, SectionID, SectionTitle, Word, Translation, Transliteration, TTS URL, StrokeWidth, StrokeHeight, StrokePaths',
+                alignLabelWithHint: true,
               ),
               maxLines: 10,
             ),
