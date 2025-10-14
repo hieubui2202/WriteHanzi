@@ -32,8 +32,18 @@ class HanziCharacter {
     final hanzi = _readString(data, ['hanzi', 'character', 'word', 'Word']) ?? id;
     final pinyin = _readString(data, ['pinyin', 'transliteration', 'pinyinText', 'Transliteration']) ?? '';
     final meaning = _readString(data, ['meaning', 'translation', 'meaningEn', 'Translation']) ?? '';
-    final unitId =
-        _readString(data, ['unitId', 'sectionId', 'SectionID']) ?? fallbackUnitId ?? '';
+    final unitId = _readString(
+          data,
+          [
+            'unitId',
+            'sectionId',
+            'SectionID',
+            'section',
+            'SectionTitle',
+          ],
+        ) ??
+        fallbackUnitId ??
+        '';
     final ttsUrl = _readString(data, ['ttsUrl', 'ttsURL', 'audioUrl', 'audio', 'TTS URL']);
 
     final strokeData = StrokeData.fromFirestore(data);
@@ -98,14 +108,37 @@ class StrokeData {
     final strokeDataRaw = source['strokeData'];
 
     if (strokeDataRaw is Map<String, dynamic>) {
-      final width = _parseInt(strokeDataRaw['width']) ?? _parseInt(strokeDataRaw['StrokeWidth']) ?? 100;
-      final height = _parseInt(strokeDataRaw['height']) ?? _parseInt(strokeDataRaw['StrokeHeight']) ?? 100;
+      final svgCandidate = strokeDataRaw['svgList'] ?? strokeDataRaw['svg_list'];
+      final svgParsed = _tryParseSvgList(svgCandidate, strokeDataRaw);
+      if (svgParsed != null) {
+        return svgParsed;
+      }
+
+      final width =
+          _parseInt(strokeDataRaw['width']) ?? _parseInt(strokeDataRaw['StrokeWidth']) ?? 100;
+      final height =
+          _parseInt(strokeDataRaw['height']) ?? _parseInt(strokeDataRaw['StrokeHeight']) ?? 100;
       final paths = _parsePaths(strokeDataRaw['paths'] ?? strokeDataRaw['StrokePaths']);
-      return StrokeData(width: width, height: height, paths: paths);
+
+      if (paths.isNotEmpty) {
+        return StrokeData(width: width, height: height, paths: paths);
+      }
     }
 
-    final width = _parseInt(source['width']) ?? _parseInt(source['strokeWidth']) ?? _parseInt(source['StrokeWidth']) ?? 100;
-    final height = _parseInt(source['height']) ?? _parseInt(source['strokeHeight']) ?? _parseInt(source['StrokeHeight']) ?? 100;
+    final svgList = source['svgList'] ?? source['svg_list'] ?? source['svgPaths'];
+    final svgParsed = _tryParseSvgList(svgList, source);
+    if (svgParsed != null) {
+      return svgParsed;
+    }
+
+    final width = _parseInt(source['width']) ??
+        _parseInt(source['strokeWidth']) ??
+        _parseInt(source['StrokeWidth']) ??
+        100;
+    final height = _parseInt(source['height']) ??
+        _parseInt(source['strokeHeight']) ??
+        _parseInt(source['StrokeHeight']) ??
+        100;
     final paths = _parsePaths(source['paths'] ?? source['strokePaths'] ?? source['StrokePaths']);
     return StrokeData(width: width, height: height, paths: paths);
   }
@@ -142,5 +175,69 @@ class StrokeData {
         .map((segment) => segment.trim())
         .where((segment) => segment.isNotEmpty)
         .toList();
+  }
+
+  static StrokeData? _tryParseSvgList(dynamic raw, Map<String, dynamic> context) {
+    if (raw == null) {
+      return null;
+    }
+
+    final List<dynamic> entries;
+    if (raw is List) {
+      entries = raw;
+    } else {
+      entries = [raw];
+    }
+
+    final paths = <String>[];
+    int? width;
+    int? height;
+
+    for (final entry in entries) {
+      if (entry is Map<String, dynamic>) {
+        width ??= _parseInt(entry['width']) ??
+            _parseInt(entry['strokeWidth']) ??
+            _parseInt(entry['StrokeWidth']);
+        height ??= _parseInt(entry['height']) ??
+            _parseInt(entry['strokeHeight']) ??
+            _parseInt(entry['StrokeHeight']);
+
+        final nestedPaths = _parsePaths(entry['paths'] ?? entry['strokePaths'] ?? entry['StrokePaths']);
+        if (nestedPaths.isNotEmpty) {
+          paths.addAll(nestedPaths);
+        }
+
+        for (final key in const ['path', 'd', 'strokePath', 'StrokePath', 'svg', 'svgPath']) {
+          if (entry.containsKey(key)) {
+            paths.addAll(_parsePaths(entry[key]));
+          }
+        }
+      } else {
+        paths.addAll(_parsePaths(entry));
+      }
+    }
+
+    if (paths.isEmpty) {
+      return null;
+    }
+
+    width ??= _parseInt(context['strokeWidth']) ?? _parseInt(context['width']);
+    height ??= _parseInt(context['strokeHeight']) ?? _parseInt(context['height']);
+
+    final dedupedPaths = <String>[];
+    for (final path in paths) {
+      if (path.trim().isEmpty) {
+        continue;
+      }
+      if (!dedupedPaths.contains(path)) {
+        dedupedPaths.add(path);
+      }
+    }
+
+    return StrokeData(
+      width: width ?? height ?? 109,
+      height: height ?? width ?? 109,
+      paths: dedupedPaths,
+    );
   }
 }

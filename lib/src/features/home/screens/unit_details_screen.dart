@@ -36,7 +36,11 @@ class UnitDetailsScreen extends StatelessWidget {
         ),
         child: SafeArea(
           child: StreamBuilder<List<HanziCharacter>>(
-            stream: CharacterRepository().getCharactersForUnit(unit.id, fallbackIds: unit.characters),
+            stream: CharacterRepository().getCharactersForUnit(
+              unit.id,
+              sectionTitle: unit.title,
+              fallbackIds: unit.characters,
+            ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());

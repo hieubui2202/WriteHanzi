@@ -8,7 +8,11 @@ class CharacterRepository {
   final CollectionReference _charactersCollection =
       FirebaseFirestore.instance.collection('characters');
 
-  Stream<List<HanziCharacter>> getCharactersForUnit(String unitId, {List<String> fallbackIds = const []}) async* {
+  Stream<List<HanziCharacter>> getCharactersForUnit(
+    String unitId, {
+    String? sectionTitle,
+    List<String> fallbackIds = const [],
+  }) async* {
     final query = _charactersCollection.where('unitId', isEqualTo: unitId);
 
     try {
@@ -21,12 +25,9 @@ class CharacterRepository {
           continue;
         }
 
-        final altSnapshot = await _charactersCollection.where('SectionID', isEqualTo: unitId).get();
-        if (altSnapshot.docs.isNotEmpty) {
-          yield altSnapshot.docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return HanziCharacter.fromFirestore(doc.id, data, fallbackUnitId: unitId);
-          }).toList();
+        final alternative = await _loadFromAlternateFields(unitId: unitId, sectionTitle: sectionTitle);
+        if (alternative != null) {
+          yield alternative;
           continue;
         }
 
@@ -59,6 +60,49 @@ class CharacterRepository {
       debugPrint('Failed to load characters for $unitId: $error\n$stackTrace');
       yield FallbackContent.charactersForUnit(unitId);
     }
+  }
+
+  Future<List<HanziCharacter>?> _loadFromAlternateFields({
+    required String unitId,
+    String? sectionTitle,
+  }) async {
+    final candidates = <String>{};
+    if (unitId.isNotEmpty) {
+      candidates.add(unitId);
+    }
+    if (sectionTitle != null && sectionTitle.trim().isNotEmpty) {
+      candidates.add(sectionTitle.trim());
+    }
+
+    const fieldVariants = <String>[
+      'SectionID',
+      'sectionId',
+      'section',
+      'SectionTitle',
+      'unit',
+      'unitName',
+    ];
+
+    for (final value in candidates) {
+      for (final field in fieldVariants) {
+        try {
+          final snapshot = await _charactersCollection.where(field, isEqualTo: value).get();
+          if (snapshot.docs.isNotEmpty) {
+            return snapshot.docs
+                .map((doc) => HanziCharacter.fromFirestore(
+                      doc.id,
+                      doc.data() as Map<String, dynamic>,
+                      fallbackUnitId: unitId,
+                    ))
+                .toList();
+          }
+        } on FirebaseException catch (error) {
+          debugPrint('Query on $field == $value failed: $error');
+        }
+      }
+    }
+
+    return null;
   }
 
   // Admin function to add a character
