@@ -559,53 +559,108 @@ class _StrokeDemoStepState extends State<_StrokeDemoStep>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Text('Màu nét:', style: TextStyle(color: Color(0xFFC9D4FF))),
-                    const SizedBox(width: 12),
-                    Wrap(
-                      spacing: 10,
-                      children: [
-                        _ColorOption(
-                          color: const Color(0xFF00E5FF),
-                          selected: _strokeColor == const Color(0xFF00E5FF),
-                          onTap: () => setState(() => _strokeColor = const Color(0xFF00E5FF)),
-                        ),
-                        _ColorOption(
-                          color: const Color(0xFFFBBF24),
-                          selected: _strokeColor == const Color(0xFFFBBF24),
-                          onTap: () => setState(() => _strokeColor = const Color(0xFFFBBF24)),
-                        ),
-                        _ColorOption(
-                          color: const Color(0xFF78E08F),
-                          selected: _strokeColor == const Color(0xFF78E08F),
-                          onTap: () => setState(() => _strokeColor = const Color(0xFF78E08F)),
-                        ),
-                        _ColorOption(
-                          color: const Color(0xFFFF7AA0),
-                          selected: _strokeColor == const Color(0xFFFF7AA0),
-                          onTap: () => setState(() => _strokeColor = const Color(0xFFFF7AA0)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 16),
-                    const Text('Độ dày:', style: TextStyle(color: Color(0xFFC9D4FF))),
-                    Expanded(
-                      child: Slider(
-                        value: _strokeWidth,
-                        min: 2,
-                        max: 12,
-                        divisions: 10,
-                        label: _strokeWidth.toStringAsFixed(0),
-                        onChanged: (value) => setState(() => _strokeWidth = value),
-                      ),
-                    ),
-                    FilledButton.tonalIcon(
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    Widget buildPalette() => Wrap(
+                          spacing: 10,
+                          children: [
+                            _ColorOption(
+                              color: const Color(0xFF00E5FF),
+                              selected: _strokeColor == const Color(0xFF00E5FF),
+                              onTap: () => setState(() => _strokeColor = const Color(0xFF00E5FF)),
+                            ),
+                            _ColorOption(
+                              color: const Color(0xFFFBBF24),
+                              selected: _strokeColor == const Color(0xFFFBBF24),
+                              onTap: () => setState(() => _strokeColor = const Color(0xFFFBBF24)),
+                            ),
+                            _ColorOption(
+                              color: const Color(0xFF78E08F),
+                              selected: _strokeColor == const Color(0xFF78E08F),
+                              onTap: () => setState(() => _strokeColor = const Color(0xFF78E08F)),
+                            ),
+                            _ColorOption(
+                              color: const Color(0xFFFF7AA0),
+                              selected: _strokeColor == const Color(0xFFFF7AA0),
+                              onTap: () => setState(() => _strokeColor = const Color(0xFFFF7AA0)),
+                            ),
+                          ],
+                        );
+
+                    Widget buildSlider() => Slider(
+                          value: _strokeWidth,
+                          min: 2,
+                          max: 12,
+                          divisions: 10,
+                          label: _strokeWidth.toStringAsFixed(0),
+                          onChanged: (value) => setState(() => _strokeWidth = value),
+                        );
+
+                    final replayButton = FilledButton.tonalIcon(
                       onPressed: _replay,
                       icon: const Icon(Icons.refresh_rounded),
                       label: const Text('Vẽ lại'),
-                    ),
-                  ],
+                    );
+
+                    final isCompact = constraints.maxWidth < 580;
+                    if (isCompact) {
+                      final sliderWidth = constraints.maxWidth.clamp(180.0, 360.0);
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              const Text(
+                                'Màu nét:',
+                                style: TextStyle(color: Color(0xFFC9D4FF)),
+                              ),
+                              buildPalette(),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              const Text(
+                                'Độ dày:',
+                                style: TextStyle(color: Color(0xFFC9D4FF)),
+                              ),
+                              SizedBox(
+                                width: sliderWidth,
+                                child: buildSlider(),
+                              ),
+                              replayButton,
+                            ],
+                          ),
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        const Text(
+                          'Màu nét:',
+                          style: TextStyle(color: Color(0xFFC9D4FF)),
+                        ),
+                        const SizedBox(width: 12),
+                        Flexible(child: buildPalette()),
+                        const SizedBox(width: 16),
+                        const Text(
+                          'Độ dày:',
+                          style: TextStyle(color: Color(0xFFC9D4FF)),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: buildSlider()),
+                        const SizedBox(width: 12),
+                        replayButton,
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 AspectRatio(

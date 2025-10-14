@@ -58,24 +58,23 @@ class UnitDetailsScreen extends StatelessWidget {
                 stream: user != null ? ProgressService().getUserProfileStream(user.uid) : Stream.value(null),
                 builder: (context, userProfileSnapshot) {
                   final userProfile = userProfileSnapshot.data;
-                  final completedCount = userProfile == null
-                      ? 0
-                      : characters.where((c) => userProfile.progress[c.id] == 'completed').length;
+                  final completedCount = characters
+                      .where((character) => _isCharacterCompleted(
+                            profile: userProfile,
+                            unitId: unit.id,
+                            characterId: character.id,
+                          ))
+                      .length;
 
                   return CustomScrollView(
                     slivers: [
-                      SliverAppBar(
-                        pinned: true,
-                        expandedHeight: 180,
-                        backgroundColor: Colors.transparent,
-                        flexibleSpace: FlexibleSpaceBar(
-                          background: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                            child: _UnitHeader(
-                              unit: unit,
-                              completed: completedCount,
-                              total: characters.length,
-                            ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                        sliver: SliverToBoxAdapter(
+                          child: _UnitHeader(
+                            unit: unit,
+                            completed: completedCount,
+                            total: characters.length,
                           ),
                         ),
                       ),
@@ -86,8 +85,11 @@ class UnitDetailsScreen extends StatelessWidget {
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final character = characters[index];
-                            final bool isCompleted =
-                                userProfile?.progress[character.id] == 'completed';
+                            final isCompleted = _isCharacterCompleted(
+                              profile: userProfile,
+                              unitId: unit.id,
+                              characterId: character.id,
+                            );
 
                             return _CharacterTile(
                               character: character,
@@ -110,6 +112,58 @@ class UnitDetailsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Map<String, dynamic> _progressForUnit(UserProfile? profile, String unitId) {
+  if (profile == null) {
+    return const {};
+  }
+
+  final raw = profile.progress[unitId];
+  if (raw is Map<String, dynamic>) {
+    return raw;
+  }
+  if (raw is Map) {
+    return raw.map((key, value) => MapEntry(key.toString(), value));
+  }
+  return const {};
+}
+
+bool _isProgressEntryCompleted(dynamic entry) {
+  if (entry == null) {
+    return false;
+  }
+  if (entry is bool) {
+    return entry;
+  }
+  if (entry is num) {
+    return entry > 0;
+  }
+  if (entry is String) {
+    final value = entry.toLowerCase();
+    return value == 'completed' || value == 'true' || value == 'done';
+  }
+  if (entry is Map) {
+    return _isProgressEntryCompleted(entry['completed']);
+  }
+  return false;
+}
+
+bool _isCharacterCompleted({
+  required UserProfile? profile,
+  required String unitId,
+  required String characterId,
+}) {
+  if (profile == null) {
+    return false;
+  }
+
+  final unitProgress = _progressForUnit(profile, unitId);
+  if (_isProgressEntryCompleted(unitProgress[characterId])) {
+    return true;
+  }
+
+  return _isProgressEntryCompleted(profile.progress[characterId]);
 }
 
 class _UnitHeader extends StatelessWidget {
