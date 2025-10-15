@@ -35,6 +35,9 @@ class FallbackContent {
     order: 1,
     characters: const ['char_water'],
     xpReward: 10,
+    sectionId: 'section_1_unit_1',
+    sectionNumber: 1,
+    unitNumber: 1,
   );
 
   /// Pre-baked set of units used when Firestore is unavailable.

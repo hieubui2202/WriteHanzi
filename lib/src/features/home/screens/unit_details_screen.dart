@@ -38,6 +38,7 @@ class UnitDetailsScreen extends StatelessWidget {
           child: StreamBuilder<List<HanziCharacter>>(
             stream: CharacterRepository().getCharactersForUnit(
               unit.id,
+              unit: unit,
               sectionTitle: unit.title,
               fallbackIds: unit.characters,
             ),

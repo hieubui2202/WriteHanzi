@@ -11,6 +11,15 @@ class Unit {
   final List<String> characters; // List of hanzi characters
   final int xpReward;
 
+  @JsonKey(includeIfNull: false)
+  final String? sectionId;
+
+  @JsonKey(includeIfNull: false)
+  final int? sectionNumber;
+
+  @JsonKey(includeIfNull: false)
+  final int? unitNumber;
+
   Unit({
     required this.id,
     required this.title,
@@ -18,6 +27,9 @@ class Unit {
     required this.order,
     required this.characters,
     required this.xpReward,
+    this.sectionId,
+    this.sectionNumber,
+    this.unitNumber,
   });
 
   factory Unit.fromJson(Map<String, dynamic> json) => _$UnitFromJson(json);
@@ -81,6 +93,10 @@ class Unit {
         ) ??
         (characters.length * 10);
 
+    final resolvedSectionId = _resolveSectionId(id, data, sectionInfo);
+    final resolvedSectionNumber = _resolveSectionNumber(data, sectionInfo, resolvedSectionId, title);
+    final resolvedUnitNumber = _resolveUnitNumber(data, sectionInfo, resolvedSectionId, title);
+
     return Unit(
       id: id,
       title: title,
@@ -88,7 +104,50 @@ class Unit {
       order: order,
       characters: characters,
       xpReward: xpReward,
+      sectionId: resolvedSectionId,
+      sectionNumber: resolvedSectionNumber,
+      unitNumber: resolvedUnitNumber,
     );
+  }
+
+  List<String> candidateCharacterKeys() {
+    final keys = <String>{};
+
+    void addKey(String? value) {
+      if (value == null) {
+        return;
+      }
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) {
+        return;
+      }
+      keys.add(trimmed);
+      keys.add(trimmed.replaceAll('•', ' '));
+      keys.add(trimmed.replaceAll(RegExp(r'[\s•]+'), ' '));
+      keys.add(trimmed.replaceAll(RegExp(r'[_\s•]+'), ''));
+    }
+
+    addKey(id);
+    addKey(id.replaceAll('__', '_'));
+
+    addKey(title);
+    addKey(description);
+    addKey(sectionId);
+
+    if (sectionNumber != null && unitNumber != null) {
+      final section = sectionNumber!;
+      final unit = unitNumber!;
+      addKey('section_${section}_unit_${unit}');
+      addKey('section_${section}_unit$unit');
+      addKey('section${section}_unit${unit}');
+      addKey('section${section}unit${unit}');
+      addKey('section-$section-unit-$unit');
+      addKey('Section $section, Unit $unit');
+      addKey('Section $section Unit $unit');
+      addKey('section $section unit $unit');
+    }
+
+    return keys.where((value) => value.trim().isNotEmpty).toList();
   }
 
   static String? _readString(Map<String, dynamic> data, List<String> keys) {
@@ -252,5 +311,133 @@ class Unit {
     final sectionWeight = (section ?? 0) * 1000;
     final unitWeight = unit ?? 0;
     return sectionWeight + unitWeight;
+  }
+
+  static String? _resolveSectionId(
+      String id, Map<String, dynamic> data, ({int? section, int? unit}) info) {
+    final candidate = _readString(data, [
+          'sectionId',
+          'SectionID',
+          'sectionKey',
+          'sectionRef',
+          'sectionPath',
+          'sectionDocument',
+          'sectionDoc',
+        ]) ??
+        _coerceToString(data['section']) ??
+        _coerceToString(data['Section']);
+
+    final section = info.section;
+    final unit = info.unit;
+
+    if (candidate != null) {
+      final trimmed = candidate.trim();
+      if (trimmed.isNotEmpty) {
+        final numericOnly = RegExp(r'^\d+$');
+        if (numericOnly.hasMatch(trimmed) && section != null && unit != null) {
+          return 'section_${section}_unit_${unit}';
+        }
+        return trimmed;
+      }
+    }
+
+    if (section != null && unit != null) {
+      return 'section_${section}_unit_${unit}';
+    }
+
+    return id;
+  }
+
+  static int? _resolveSectionNumber(
+    Map<String, dynamic> data,
+    ({int? section, int? unit}) info,
+    String? sectionId,
+    String title,
+  ) {
+    final direct = _readInt(data, [
+      'sectionNumber',
+      'section',
+      'Section',
+      'sectionIndex',
+      'sectionNo',
+    ]);
+    if (direct != null) {
+      return direct;
+    }
+
+    final derived = info.section;
+    if (derived != null) {
+      return derived;
+    }
+
+    final fromSectionId = _extractFirstInt(sectionId);
+    if (fromSectionId != null) {
+      return fromSectionId;
+    }
+
+    return _extractFirstInt(title);
+  }
+
+  static int? _resolveUnitNumber(
+    Map<String, dynamic> data,
+    ({int? section, int? unit}) info,
+    String? sectionId,
+    String title,
+  ) {
+    final direct = _readInt(data, [
+      'unitNumber',
+      'unit',
+      'Unit',
+      'unitIndex',
+      'unitNo',
+    ]);
+    if (direct != null) {
+      return direct;
+    }
+
+    final derived = info.unit;
+    if (derived != null) {
+      return derived;
+    }
+
+    final fromSectionId = _extractLastInt(sectionId);
+    if (fromSectionId != null) {
+      return fromSectionId;
+    }
+
+    return _extractLastInt(title);
+  }
+
+  static String? _coerceToString(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    return value.toString();
+  }
+
+  static int? _extractFirstInt(String? value) {
+    if (value == null) {
+      return null;
+    }
+    final match = RegExp(r'(\d+)').firstMatch(value);
+    if (match == null) {
+      return null;
+    }
+    return int.tryParse(match.group(1)!);
+  }
+
+  static int? _extractLastInt(String? value) {
+    if (value == null) {
+      return null;
+    }
+    final matches = RegExp(r'(\d+)').allMatches(value).toList();
+    if (matches.isEmpty) {
+      return null;
+    }
+    return int.tryParse(matches.last.group(1)!);
   }
 }
