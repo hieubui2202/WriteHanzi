@@ -63,7 +63,7 @@ class UnitDetailsScreen extends StatelessWidget {
                           : const Icon(Icons.arrow_forward_ios),
                       onTap: () {
                         // Navigate to the writing screen, passing the character object
-                        context.go('/unit/${unit.id}/write/${character.progressKey}', extra: character);
+                        context.go('/unit/${unit.id}/write/$progressKey', extra: character);
                       },
                     ),
                   );
