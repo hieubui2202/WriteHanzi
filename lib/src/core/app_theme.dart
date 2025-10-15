@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color primaryColor = Color(0xFF58CC02); // Duolingo Green
@@ -14,19 +13,31 @@ class AppTheme {
     return ThemeData(
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
-      textTheme: GoogleFonts.latoTextTheme().copyWith(
-        headlineSmall: const TextStyle(color: textColor, fontWeight: FontWeight.bold),
-        titleLarge: const TextStyle(color: textColor, fontWeight: FontWeight.bold),
-        bodyMedium: const TextStyle(color: secondaryTextColor),
+      textTheme: ThemeData.light().textTheme.copyWith(
+        headlineSmall: const TextStyle(
+          color: textColor,
+          fontFamily: 'Arial',
+          fontWeight: FontWeight.bold,
+        ),
+        titleLarge: const TextStyle(
+          color: textColor,
+          fontFamily: 'Arial',
+          fontWeight: FontWeight.bold,
+        ),
+        bodyMedium: const TextStyle(
+          color: secondaryTextColor,
+          fontFamily: 'Arial',
+        ),
       ),
       appBarTheme: const AppBarTheme(
         color: backgroundColor,
         elevation: 0,
         iconTheme: IconThemeData(color: secondaryTextColor),
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
           color: textColor,
           fontSize: 20,
           fontWeight: FontWeight.bold,
+          fontFamily: 'Arial',
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

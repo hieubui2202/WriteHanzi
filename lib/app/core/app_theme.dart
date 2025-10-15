@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // Centralized theme configuration for the application.
 class AppTheme {
@@ -12,23 +11,19 @@ class AppTheme {
     primarySwatch: Colors.deepPurple,
     scaffoldBackgroundColor: Colors.grey[50],
 
-    // Define the default font family using Google Fonts.
-    // Noto Sans SC is a great choice for Chinese characters.
-    textTheme: GoogleFonts.notoSansScTextTheme(
-      ThemeData.light().textTheme,
-    ).copyWith(
-      titleLarge: const TextStyle(fontWeight: FontWeight.w600),
-    ),
+    // Define the default font family for the experience.
+    textTheme: ThemeData.light().textTheme.apply(fontFamily: 'Arial'),
 
     appBarTheme: AppBarTheme(
       backgroundColor: Colors.white,
       foregroundColor: Colors.black87,
       elevation: 0,
       centerTitle: true,
-      titleTextStyle: GoogleFonts.notoSansSc(
+      titleTextStyle: const TextStyle(
+        fontFamily: 'Arial',
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        color: Colors.black87
+        color: Colors.black87,
       ),
     ),
 
