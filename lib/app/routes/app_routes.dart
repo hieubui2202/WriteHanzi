@@ -1,15 +1,11 @@
-
 part of 'app_pages.dart';
 
-// Abstract class for route names to avoid using raw strings.
 abstract class Routes {
-  Routes._();
-
-  static const HOME = _Paths.HOME;
-  static const WRITING_PRACTICE = _Paths.WRITING_PRACTICE;
+  static const home = _Paths.home;
+  static const characterList = _Paths.characterList;
 }
 
 abstract class _Paths {
-  static const HOME = '/home';
-  static const WRITING_PRACTICE = '/writing-practice';
+  static const home = '/home';
+  static const characterList = '/character-list';
 }

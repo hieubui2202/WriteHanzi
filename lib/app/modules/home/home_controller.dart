@@ -1,45 +1,53 @@
-
 import 'package:get/get.dart';
-import 'package:myapp/app/data/models/hanzi_character.dart';
-import 'package:myapp/app/domain/repository/i_character_repository.dart';
-import 'package:myapp/app/routes/app_pages.dart';
+import 'package:myapp/app/data/models/chapter_model.dart';
+import 'package:myapp/app/data/models/lesson_model.dart';
+import 'package:myapp/app/data/repositories/home_repository.dart';
 
 class HomeController extends GetxController {
-  final ICharacterRepository _repository;
-  HomeController(this._repository);
+  final HomeRepository _repository = Get.find<HomeRepository>();
 
-  // Use Rx for reactive state management. The UI will automatically update when these change.
-  final RxBool isLoading = true.obs;
-  final RxList<HanziCharacter> characters = <HanziCharacter>[].obs;
-  final RxString error = ''.obs;
+  // Observables for state management
+  final chapters = <Chapter>[].obs;
+  final lessons = <Lesson>[].obs;
+  final isLoadingChapters = true.obs;
+  final isLoadingLessons = false.obs;
+  final selectedChapter = Rx<Chapter?>(null);
 
   @override
   void onInit() {
     super.onInit();
-    fetchCharacters();
+    fetchChapters();
   }
 
-  // Logic to fetch characters from the repository.
-  Future<void> fetchCharacters() async {
+  // Fetch chapters from the repository
+  void fetchChapters() async {
     try {
-      isLoading(true);
-      error('');
-      final characterList = await _repository.getCharacters();
-      if (characterList.isEmpty) {
-        error('Không tìm thấy ký tự nào.');
-      } else {
-        characters.assignAll(characterList);
+      isLoadingChapters.value = true;
+      final chapterList = await _repository.getChapters();
+      chapters.assignAll(chapterList);
+      // Automatically select the first chapter and fetch its lessons
+      if (chapters.isNotEmpty) {
+        selectChapter(chapters.first);
       }
-    } catch (e) {
-      error('Đã xảy ra lỗi khi tải dữ liệu.');
-      // In a real app, log this error to a service like Crashlytics
     } finally {
-      isLoading(false);
+      isLoadingChapters.value = false;
     }
   }
 
-  // Navigate to the practice screen, passing the selected character as an argument.
-  void startPractice(HanziCharacter character) {
-    Get.toNamed(Routes.WRITING_PRACTICE, arguments: character);
+  // Fetch lessons for a given chapter
+  void fetchLessonsForChapter(String chapterId) async {
+    try {
+      isLoadingLessons.value = true;
+      final lessonList = await _repository.getLessonsForChapter(chapterId);
+      lessons.assignAll(lessonList);
+    } finally {
+      isLoadingLessons.value = false;
+    }
+  }
+
+  // Handle chapter selection
+  void selectChapter(Chapter chapter) {
+    selectedChapter.value = chapter;
+    fetchLessonsForChapter(chapter.id);
   }
 }

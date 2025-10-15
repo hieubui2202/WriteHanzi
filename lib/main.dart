@@ -1,17 +1,22 @@
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:myapp/app/core/app_theme.dart';
-import 'package:myapp/app/routes/app_pages.dart';
-import 'firebase_options.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:myapp/firebase_options.dart'; // Import this
 
+import 'app/routes/app_pages.dart';
+
+// Modify the main function to be async
 void main() async {
+  // Ensure that Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(
+    const MyApp(),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -19,17 +24,40 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // GetMaterialApp is the new root widget for the application.
-    // It provides routing, dependency management, and more.
+    const Color primarySeedColor = Colors.deepPurple;
+
+    final TextTheme appTextTheme = TextTheme(
+      displayLarge: GoogleFonts.oswald(fontSize: 57, fontWeight: FontWeight.bold),
+      titleLarge: GoogleFonts.roboto(fontSize: 22, fontWeight: FontWeight.w500),
+      bodyMedium: GoogleFonts.openSans(fontSize: 14),
+    );
+
     return GetMaterialApp(
-      title: 'Hanzì Journey',
-      theme: AppTheme.lightTheme,
-      // Define the initial route and the list of all pages.
-      initialRoute: AppPages.INITIAL,
+      title: "Application",
+      initialRoute: AppPages.initial,
       getPages: AppPages.routes,
-      // Disable the default debug banner.
-      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: primarySeedColor,
+          brightness: Brightness.light,
+        ),
+        textTheme: appTextTheme,
+        appBarTheme: AppBarTheme(
+          backgroundColor: primarySeedColor,
+          foregroundColor: Colors.white,
+          titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: primarySeedColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            textStyle: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ),
     );
   }
 }
-
