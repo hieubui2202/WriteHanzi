@@ -79,7 +79,13 @@ class WritingScreen extends StatelessWidget {
                             fit: StackFit.expand,
                             children: [
                               CharacterOverlay(character: character.hanzi),
-                              const WritingPad(),
+                              WritingPad(
+                                strokePaths: character.strokeData.paths,
+                                viewBox: Size(
+                                  character.strokeData.width.toDouble(),
+                                  character.strokeData.height.toDouble(),
+                                ),
+                              ),
                             ],
                           ),
                         ),

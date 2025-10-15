@@ -909,7 +909,16 @@ class _WritingPracticeStep extends StatelessWidget {
                             ),
                           ),
                           CharacterOverlay(character: character.hanzi),
-                          const WritingPad(),
+                          WritingPad(
+                            strokePaths: character.strokeData.paths,
+                            viewBox: Size(
+                              character.strokeData.width.toDouble(),
+                              character.strokeData.height.toDouble(),
+                            ),
+                            highlightColor: const Color(0xFF00E5FF),
+                            baseStrokeColor: const Color(0xFF1F2B4E),
+                            userStrokeColor: Colors.white,
+                          ),
                         ],
                       ),
                     ),
