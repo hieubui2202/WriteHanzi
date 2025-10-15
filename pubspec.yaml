@@ -20,10 +20,11 @@ dependencies:
   google_fonts: ^6.3.2
   firebase_storage: ^13.0.2
   intl: ^0.20.2
-  
+
   # Added for json_serializable
   json_annotation: ^4.9.0
   google_sign_in: ^6.2.1 # Downgraded for stability
+  path_drawing: ^1.0.1
 
 dev_dependencies:
   flutter_test:
