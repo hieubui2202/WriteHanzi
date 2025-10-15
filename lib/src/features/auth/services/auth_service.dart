@@ -1,6 +1,5 @@
-import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/src/models/user_profile.dart';
@@ -8,10 +7,7 @@ import 'package:myapp/src/models/user_profile.dart';
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-  // Initialize with the correct database URL
-  final FirebaseDatabase _database = FirebaseDatabase.instanceFor(
-      app: Firebase.app(),
-      databaseURL: 'https://testlogin-4767c-default-rtdb.firebaseio.com/');
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   User? _user;
   UserProfile? _userProfile;
@@ -69,11 +65,11 @@ class AuthService with ChangeNotifier {
   }
 
   Future<UserProfile> _getOrCreateUserProfile(User user) async {
-    final dbRef = _database.ref('users/${user.uid}');
-    final snapshot = await dbRef.get();
+    final docRef = _firestore.collection('users').doc(user.uid);
+    final snapshot = await docRef.get();
 
-    if (snapshot.exists && snapshot.value != null) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
+    if (snapshot.exists && snapshot.data() != null) {
+      final data = snapshot.data()!;
       return UserProfile.fromMap(data, user.uid);
     } else {
       final newUserProfile = UserProfile(
@@ -85,12 +81,12 @@ class AuthService with ChangeNotifier {
         streak: 0,
         progress: {},
       );
-      await dbRef.set(newUserProfile.toMap());
+      await docRef.set(newUserProfile.toMap());
       return newUserProfile;
     }
   }
 
-    Future<User?> signInWithEmailAndPassword(String email, String password) async {
+  Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
       final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -122,7 +118,7 @@ class AuthService with ChangeNotifier {
           progress: {},
           photoURL: null,
         );
-        await _database.ref('users/${user.uid}').set(newUserProfile.toMap());
+        await _firestore.collection('users').doc(user.uid).set(newUserProfile.toMap());
         _userProfile = newUserProfile;
       }
       return user;
@@ -152,11 +148,21 @@ class AuthService with ChangeNotifier {
   }
 
   Stream<UserProfile?> get userProfileStream {
-    return _auth.authStateChanges().asyncMap((user) {
-      if (user != null) {
-        return _getOrCreateUserProfile(user);
+    return _auth.authStateChanges().asyncExpand((user) {
+      if (user == null) {
+        return Stream<UserProfile?>.value(null);
       }
-      return null;
+      return _firestore
+          .collection('users')
+          .doc(user.uid)
+          .snapshots()
+          .map((snapshot) {
+        final data = snapshot.data();
+        if (data == null) {
+          return null;
+        }
+        return UserProfile.fromMap(data, user.uid);
+      });
     });
   }
 }
