@@ -10,7 +10,7 @@ import 'package:myapp/src/features/home/screens/unit_details_screen.dart';
 import 'package:myapp/src/features/writing/screens/writing_screen.dart';
 import 'package:myapp/src/models/hanzi_character.dart';
 import 'package:myapp/src/models/unit.dart';
-import 'package:myapp/src/features/writing_practice/writing_practice_screen.dart';
+import 'package:myapp/src/features/writing/screens/writing_practice_screen.dart';
 
 class AppRouter {
   final BuildContext context;
@@ -69,9 +69,19 @@ class AppRouter {
                       },
                     )
                   ]),
-               GoRoute(
+              GoRoute(
                 path: 'practice',
-                builder: (context, state) => const WritingPracticeScreen(),
+                builder: (context, state) {
+                  final extra = state.extra;
+                  HanziCharacter? character;
+                  if (extra is HanziCharacter) {
+                    character = extra;
+                  } else if (extra is Map<String, dynamic> &&
+                      extra['character'] is HanziCharacter) {
+                    character = extra['character'] as HanziCharacter;
+                  }
+                  return WritingPracticeScreen(character: character);
+                },
               ),
             ]),
         GoRoute(
