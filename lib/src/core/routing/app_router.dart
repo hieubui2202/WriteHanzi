@@ -30,22 +30,42 @@ class AppRouter {
               GoRoute(
                   path: 'unit/:unitId',
                   builder: (context, state) {
-                    final unit = state.extra as Unit?;
+                    final extra = state.extra;
+                    Unit? unit;
+                    if (extra is Unit) {
+                      unit = extra;
+                    } else if (extra is Map<String, dynamic> && extra['unit'] is Unit) {
+                      unit = extra['unit'] as Unit;
+                    }
+
                     if (unit != null) {
                       return UnitDetailsScreen(unit: unit);
                     }
-                    return const Scaffold(body: Center(child: Text('Lỗi: không tìm thấy bài học')));
+
+                    return const Scaffold(
+                      body: Center(child: Text('Lỗi: không tìm thấy bài học')),
+                    );
                   },
                   routes: [
                     GoRoute(
                       path: 'write/:characterId',
                       builder: (context, state) {
-                         final character = state.extra as HanziCharacter?;
-                         if (character != null) {
-                           return WritingScreen(character: character);
-                         }
-                         return const Scaffold(body: Center(child: Text('Lỗi: không tìm thấy ký tự')));
-                      }
+                        final extra = state.extra;
+                        HanziCharacter? character;
+                        if (extra is HanziCharacter) {
+                          character = extra;
+                        } else if (extra is Map<String, dynamic> && extra['character'] is HanziCharacter) {
+                          character = extra['character'] as HanziCharacter;
+                        }
+
+                        if (character != null) {
+                          return WritingScreen(character: character);
+                        }
+
+                        return const Scaffold(
+                          body: Center(child: Text('Lỗi: không tìm thấy ký tự')),
+                        );
+                      },
                     )
                   ]),
             ]),
