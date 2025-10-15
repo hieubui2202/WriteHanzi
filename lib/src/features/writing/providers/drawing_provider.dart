@@ -1,4 +1,6 @@
 
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path_drawing/path_drawing.dart';
@@ -9,6 +11,7 @@ class DrawingProvider with ChangeNotifier {
   List<List<Offset?>> get lines => _lines;
 
   List<Path> _referencePaths = const [];
+  List<List<Offset>> _referenceSamples = const [];
   List<double> _referenceLengths = const [];
   List<double> _strokeProgress = const [];
   List<String> _pathData = const [];
@@ -46,6 +49,7 @@ class DrawingProvider with ChangeNotifier {
 
     if (pathData.isEmpty || viewBox.width == 0 || viewBox.height == 0) {
       _referencePaths = const [];
+      _referenceSamples = const [];
       _referenceLengths = const [];
       _strokeProgress = const [];
       notifyListeners();
@@ -68,6 +72,33 @@ class DrawingProvider with ChangeNotifier {
               .computeMetrics()
               .fold<double>(0, (value, metric) => value + metric.length),
         )
+        .toList(growable: false);
+
+    _referenceSamples = _referencePaths
+        .map((path) {
+          final metrics = path.computeMetrics().toList(growable: false);
+          final samples = <Offset>[];
+          for (final metric in metrics) {
+            final length = metric.length;
+            final steps = math.max(24, (length / 4).round());
+            for (int i = 0; i <= steps; i++) {
+              final distance = (i / steps) * length;
+              final tangent = metric.getTangentForOffset(distance);
+              if (tangent != null) {
+                samples.add(tangent.position);
+              }
+            }
+          }
+
+          if (samples.isEmpty && metrics.isNotEmpty) {
+            final tangent = metrics.first.getTangentForOffset(0);
+            if (tangent != null) {
+              samples.add(tangent.position);
+            }
+          }
+
+          return samples.isEmpty ? const <Offset>[] : List<Offset>.from(samples);
+        })
         .toList(growable: false);
 
     _strokeProgress = List<double>.filled(_referencePaths.length, 0);
@@ -101,13 +132,19 @@ class DrawingProvider with ChangeNotifier {
     final Offset? previousPoint = currentLine.isNotEmpty ? currentLine.last : null;
     currentLine.add(newPoint);
 
-    if (previousPoint != null && _referenceLengths.isNotEmpty) {
-      if (_currentStrokeIndex >= 0 && _currentStrokeIndex < _referenceLengths.length) {
-        _currentStrokeDrawn += (newPoint - previousPoint).distance;
-        final referenceLength = _referenceLengths[_currentStrokeIndex];
-        if (referenceLength > 0) {
-          final progress = (_currentStrokeDrawn / referenceLength).clamp(0.0, 1.0);
-          _strokeProgress[_currentStrokeIndex] = progress;
+    if (previousPoint != null &&
+        _referenceSamples.isNotEmpty &&
+        _currentStrokeIndex >= 0 &&
+        _currentStrokeIndex < _referenceSamples.length) {
+      final projection = _projectOntoStroke(newPoint, _currentStrokeIndex);
+      if (projection != null) {
+        final tolerance = _hitTolerance();
+        if (projection.distance <= tolerance) {
+          final existing = _strokeProgress[_currentStrokeIndex];
+          final updated = math.max(existing, projection.progress);
+          if (!updated.isNaN && updated > existing + 0.001) {
+            _strokeProgress[_currentStrokeIndex] = updated.clamp(0.0, 1.0);
+          }
         }
       }
     }
@@ -125,7 +162,7 @@ class DrawingProvider with ChangeNotifier {
     if (_strokeProgress.isNotEmpty &&
         _currentStrokeIndex >= 0 &&
         _currentStrokeIndex < _strokeProgress.length) {
-      if (_strokeProgress[_currentStrokeIndex] >= 0.85) {
+      if (_strokeProgress[_currentStrokeIndex] >= 0.9) {
         _strokeProgress[_currentStrokeIndex] = 1.0;
       }
 
@@ -178,4 +215,46 @@ class DrawingProvider with ChangeNotifier {
     _currentStrokeDrawn = 0;
     notifyListeners();
   }
+
+  _StrokeProjection? _projectOntoStroke(Offset point, int strokeIndex) {
+    if (strokeIndex < 0 || strokeIndex >= _referenceSamples.length) {
+      return null;
+    }
+
+    final samples = _referenceSamples[strokeIndex];
+    if (samples.isEmpty) {
+      return null;
+    }
+
+    double bestDistance = double.infinity;
+    int bestIndex = 0;
+    for (var i = 0; i < samples.length; i++) {
+      final distance = (samples[i] - point).distance;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = i;
+      }
+    }
+
+    final progress = samples.length == 1
+        ? 1.0
+        : bestIndex / math.max(1, samples.length - 1);
+
+    return _StrokeProjection(progress: progress.clamp(0.0, 1.0), distance: bestDistance);
+  }
+
+  double _hitTolerance() {
+    final shortest = _canvasSize?.shortestSide ?? _viewBox?.shortestSide ?? 0;
+    if (shortest == 0) {
+      return 24;
+    }
+    return shortest * 0.12;
+  }
+}
+
+class _StrokeProjection {
+  const _StrokeProjection({required this.progress, required this.distance});
+
+  final double progress;
+  final double distance;
 }

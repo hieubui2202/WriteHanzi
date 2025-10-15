@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:path_drawing/path_drawing.dart';
 import 'package:provider/provider.dart';
 
 import 'package:myapp/src/features/writing/providers/drawing_provider.dart';
@@ -73,6 +74,48 @@ class _WritingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    final backgroundPaint = Paint()
+      ..shader = const RadialGradient(
+        center: Alignment(0, 0.45),
+        radius: 1.15,
+        colors: [
+          Color(0xFF0E1534),
+          Color(0xFF0B1126),
+          Color(0xFF070A18),
+        ],
+        stops: [0.0, 0.55, 1.0],
+      ).createShader(rect);
+
+    canvas.drawRect(rect, backgroundPaint);
+
+    final guidePaint = Paint()
+      ..color = const Color(0xFF243059)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (size.shortestSide * 0.01).clamp(1.0, 2.5);
+
+    final borderRRect = RRect.fromRectAndRadius(
+      rect.deflate(4),
+      Radius.circular(size.shortestSide * 0.08),
+    );
+    final borderPath = Path()..addRRect(borderRRect);
+    canvas.drawPath(
+      dashPath(borderPath, dashArray: CircularIntervalList<double>(const [6, 6])),
+      guidePaint,
+    );
+
+    final crosshair = Path()
+      ..moveTo(rect.left, rect.center.dy)
+      ..lineTo(rect.right, rect.center.dy)
+      ..moveTo(rect.center.dx, rect.top)
+      ..lineTo(rect.center.dx, rect.bottom);
+
+    canvas.drawPath(
+      dashPath(crosshair, dashArray: CircularIntervalList<double>(const [6, 6])),
+      guidePaint,
+    );
+
     final baseStrokeWidth = (size.shortestSide * 0.065).clamp(6.0, 24.0);
 
     final basePaint = Paint()
