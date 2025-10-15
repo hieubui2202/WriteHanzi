@@ -12,6 +12,7 @@ import 'package:myapp/presentation/pages/trace_segment_page.dart';
 import 'package:myapp/presentation/pages/write_from_scratch_page.dart';
 import 'package:myapp/presentation/pages/build_from_parts_page.dart';
 import 'package:myapp/presentation/pages/result_page.dart';
+import 'package:myapp/presentation/pages/type_hanzi_page.dart';
 
 class WriteOneHanziPage extends StatefulWidget {
   const WriteOneHanziPage({super.key});
@@ -123,19 +124,21 @@ class _WriteOneHanziPageState extends State<WriteOneHanziPage> {
                         ? "Trace the hanzi for '${char.meaning}'"
                         : controller.currentStep == PracticeStep.finishPartialA
                             ? "Finish the hanzi for '${char.meaning}'"
-                            : controller.currentStep == PracticeStep.traceSegment
-                                ? "Trace the hanzi for '${char.meaning}'"
-                                : controller.currentStep == PracticeStep.finishPartialB
-                                    ? "Finish the hanzi for '${char.meaning}'"
-                                    : controller.currentStep == PracticeStep.writeFromScratch1
-                                        ? "Write the hanzi for '${char.meaning}'"
-                                        : controller.currentStep == PracticeStep.writeFromScratch2
-                                            ? "Write the hanzi for '${char.meaning}'"
-                                            : controller.currentStep == PracticeStep.buildFromParts1
-                                                ? 'Build the hanzi from parts'
-                                                : controller.currentStep == PracticeStep.buildFromParts2
-                                                    ? 'Assemble the hanzi'
-                                                    : 'Great job!',
+                    : controller.currentStep == PracticeStep.traceSegment
+                        ? "Trace the hanzi for '${char.meaning}'"
+                        : controller.currentStep == PracticeStep.finishPartialB
+                            ? "Finish the hanzi for '${char.meaning}'"
+                            : controller.currentStep == PracticeStep.writeFromScratch1
+                                ? "Write the hanzi for '${char.meaning}'"
+                                : controller.currentStep == PracticeStep.writeFromScratch2
+                                    ? "Write the hanzi for '${char.meaning}'"
+                                    : controller.currentStep == PracticeStep.typeOnKeyboard
+                                        ? "Type the hanzi for '${char.meaning}'"
+                                        : controller.currentStep == PracticeStep.buildFromParts1
+                                            ? 'Build the hanzi from parts'
+                                            : controller.currentStep == PracticeStep.buildFromParts2
+                                                ? 'Assemble the hanzi'
+                                                : 'Great job!',
             style: bodyStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
         ],
@@ -161,6 +164,8 @@ class _WriteOneHanziPageState extends State<WriteOneHanziPage> {
         return WriteFromScratchPage(character: char, segment: WriteSegment.firstHalf);
       case PracticeStep.writeFromScratch2:
         return WriteFromScratchPage(character: char, segment: WriteSegment.secondHalf);
+      case PracticeStep.typeOnKeyboard:
+        return TypeHanziPage(character: char);
       case PracticeStep.buildFromParts1:
         return BuildFromPartsPage(character: char, gameIndex: 0);
       case PracticeStep.buildFromParts2:

@@ -17,6 +17,7 @@ enum PracticeStep {
   finishPartialB,
   writeFromScratch1,
   writeFromScratch2,
+  typeOnKeyboard,
   buildFromParts1,
   buildFromParts2,
   result,
@@ -162,6 +163,9 @@ class PracticeFlowController extends GetxController {
       PracticeStep.buildFromParts1,
       PracticeStep.buildFromParts2,
     };
+    final typingSteps = <PracticeStep>{
+      PracticeStep.typeOnKeyboard,
+    };
     bool _allPassed(Set<PracticeStep> target) {
       final relevant = target.where((step) => available.contains(step)).toList();
       if (relevant.isEmpty) {
@@ -174,6 +178,7 @@ class PracticeFlowController extends GetxController {
       'trace': _allPassed(traceSteps),
       'missing': _allPassed(missingSteps),
       'build': _allPassed(buildSteps),
+      'typing': _allPassed(typingSteps),
     };
   }
 
@@ -204,6 +209,7 @@ class PracticeFlowController extends GetxController {
       PracticeStep.finishPartialB,
       PracticeStep.writeFromScratch1,
       PracticeStep.writeFromScratch2,
+      PracticeStep.typeOnKeyboard,
       PracticeStep.buildFromParts1,
       PracticeStep.buildFromParts2,
       PracticeStep.result,
