@@ -1,9 +1,7 @@
 
-import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
 /// Custom painter responsible for showing the reference SVG strokes and the
 /// learner's drawing.
@@ -14,6 +12,12 @@ class HanziPainter extends CustomPainter {
     required this.strokeWidth,
     required this.referencePaths,
     required this.referenceBounds,
+    this.preRenderedCount = 0,
+    this.matchedCount = 0,
+    this.showHint = false,
+    this.hintIndex = 0,
+    this.pointerStart,
+    this.pointerDirection,
   });
 
   final List<List<Offset>> lines;
@@ -21,12 +25,20 @@ class HanziPainter extends CustomPainter {
   final double strokeWidth;
   final List<Path> referencePaths;
   final Rect referenceBounds;
+  final int preRenderedCount;
+  final int matchedCount;
+  final bool showHint;
+  final int hintIndex;
+  final Offset? pointerStart;
+  final Offset? pointerDirection;
 
   @override
   void paint(Canvas canvas, Size size) {
     _drawGrid(canvas, size);
-    _drawReference(canvas, size);
+    _drawReference(canvas);
+    _drawHint(canvas);
     _drawUserLines(canvas);
+    _drawPointer(canvas);
   }
 
   void _drawGrid(Canvas canvas, Size size) {
@@ -49,41 +61,50 @@ class HanziPainter extends CustomPainter {
     canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), guidePaint);
   }
 
-  void _drawReference(Canvas canvas, Size size) {
+  void _drawReference(Canvas canvas) {
     if (referencePaths.isEmpty) {
       return;
     }
 
-    final paddingRatio = 0.1;
-    final availableWidth = size.width * (1 - paddingRatio);
-    final availableHeight = size.height * (1 - paddingRatio);
-
-    final scaleX = availableWidth / referenceBounds.width;
-    final scaleY = availableHeight / referenceBounds.height;
-    final scale = math.min(scaleX, scaleY);
-
-    final scaledWidth = referenceBounds.width * scale;
-    final scaledHeight = referenceBounds.height * scale;
-
-    final offsetX = (size.width - scaledWidth) / 2;
-    final offsetY = (size.height - scaledHeight) / 2;
-
-    final referencePaint = Paint()
-      ..color = Colors.black.withOpacity(0.18)
+    final faintPaint = Paint()
+      ..color = Colors.black.withOpacity(0.1)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = 10;
+      ..strokeWidth = 8;
 
-    final scaleMatrix = Matrix4.diagonal3Values(scale, scale, 1).storage;
-    final shiftOffset = Offset(offsetX, offsetY);
+    final solidPaint = Paint()
+      ..color = Colors.black.withOpacity(0.28)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = 9;
 
-    for (final original in referencePaths) {
-      final normalized = original.shift(-referenceBounds.topLeft);
-      final scaled = normalized.transform(scaleMatrix);
-      final translated = scaled.shift(shiftOffset);
-      canvas.drawPath(translated, referencePaint);
+    final completedLimit = (preRenderedCount + matchedCount).clamp(0, referencePaths.length);
+
+    for (var index = 0; index < referencePaths.length; index++) {
+      final paint = index < completedLimit ? solidPaint : faintPaint;
+      canvas.drawPath(referencePaths[index], paint);
     }
+  }
+
+  void _drawHint(Canvas canvas) {
+    if (!showHint) {
+      return;
+    }
+    final targetIndex = (preRenderedCount + hintIndex).clamp(0, referencePaths.length - 1);
+    if (referencePaths.isEmpty || targetIndex >= referencePaths.length) {
+      return;
+    }
+
+    final hintPaint = Paint()
+      ..color = Colors.lightBlueAccent.withOpacity(0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = strokeWidth + 2;
+
+    canvas.drawPath(referencePaths[targetIndex], hintPaint);
   }
 
   void _drawUserLines(Canvas canvas) {
@@ -107,12 +128,53 @@ class HanziPainter extends CustomPainter {
     }
   }
 
+  void _drawPointer(Canvas canvas) {
+    if (pointerStart == null || pointerDirection == null) {
+      return;
+    }
+
+    final circlePaint = Paint()
+      ..color = const Color(0xFF1FD77C)
+      ..style = PaintingStyle.fill;
+
+    final arrowPaint = Paint()
+      ..color = const Color(0xFF1FD77C)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(pointerStart!, 9, circlePaint);
+
+    final direction = pointerDirection!;
+    if (direction.distanceSquared == 0) {
+      return;
+    }
+
+    final norm = direction.distance;
+    final unit = Offset(direction.dx / norm, direction.dy / norm);
+    final arrowTip = pointerStart! + unit * 28;
+    final perp = Offset(-unit.dy, unit.dx);
+    final wing = 7.0;
+    final path = Path()
+      ..moveTo(arrowTip.dx, arrowTip.dy)
+      ..lineTo(arrowTip.dx - unit.dx * 12 + perp.dx * wing,
+          arrowTip.dy - unit.dy * 12 + perp.dy * wing)
+      ..lineTo(arrowTip.dx - unit.dx * 12 - perp.dx * wing,
+          arrowTip.dy - unit.dy * 12 - perp.dy * wing)
+      ..close();
+    canvas.drawPath(path, arrowPaint);
+  }
+
   @override
   bool shouldRepaint(HanziPainter oldDelegate) {
     return oldDelegate.lines != lines ||
         oldDelegate.strokeColor != strokeColor ||
         oldDelegate.strokeWidth != strokeWidth ||
         oldDelegate.referencePaths != referencePaths ||
-        oldDelegate.referenceBounds != referenceBounds;
+        oldDelegate.referenceBounds != referenceBounds ||
+        oldDelegate.preRenderedCount != preRenderedCount ||
+        oldDelegate.matchedCount != matchedCount ||
+        oldDelegate.showHint != showHint ||
+        oldDelegate.hintIndex != hintIndex ||
+        oldDelegate.pointerStart != pointerStart ||
+        oldDelegate.pointerDirection != pointerDirection;
   }
 }

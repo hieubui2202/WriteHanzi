@@ -1,60 +1,69 @@
-
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_drawing/path_drawing.dart';
 
 import 'package:myapp/app/data/models/hanzi_character.dart';
 import 'package:myapp/app/routes/app_pages.dart';
 
-import 'practice_session_controller.dart';
-import 'widgets/hanzi_canvas.dart';
+import '../writing_practice/practice_session_controller.dart';
+import '../writing_practice/widgets/hanzi_canvas.dart';
 
-class WritingPracticeController extends GetxController {
+class MissingStrokeController extends GetxController {
   late final HanziCharacter character;
-  late final List<Path> referencePaths;
-  late final Rect referenceBounds;
-
-  final GlobalKey<HanziCanvasState> canvasKey = GlobalKey<HanziCanvasState>();
+  late final PracticeSessionController session;
 
   final RxInt matchedCount = 0.obs;
   final RxBool canContinue = false.obs;
 
-  late final PracticeSessionController session;
+  late final List<Path> referencePaths;
+  late final Rect referenceBounds;
+  late final List<Path> expectedPaths;
+  late final int preRenderedCount;
+
+  final GlobalKey<HanziCanvasState> canvasKey = GlobalKey<HanziCanvasState>();
 
   @override
   void onInit() {
     super.onInit();
     session = Get.find<PracticeSessionController>();
 
-    if (Get.arguments is HanziCharacter) {
-      character = Get.arguments as HanziCharacter;
+    final args = Get.arguments;
+    if (args is Map && args['character'] is HanziCharacter) {
+      character = args['character'] as HanziCharacter;
       session.initialize(character);
-      _prepareReferencePaths();
+      final missing = args['missingCount'] is int
+          ? (args['missingCount'] as int)
+          : character.missingCount;
+      _prepareReferencePaths(missing);
     } else {
-      referencePaths = const [];
-      referenceBounds = const Rect.fromLTWH(0, 0, 1, 1);
       Get.back();
-      Get.snackbar('Lỗi', 'Không có ký tự nào được chọn để luyện tập.');
+      Get.snackbar('Lỗi', 'Thiếu dữ liệu ký tự cho bài tập hoàn thiện nét.');
     }
   }
 
-  void _prepareReferencePaths() {
-    final paths = <Path>[];
+  void _prepareReferencePaths(int missingCount) {
+    final parsed = <Path>[];
     for (final raw in character.svgList) {
       final data = raw.trim();
       if (data.isEmpty) continue;
       try {
-        paths.add(parseSvgPathData(data));
+        parsed.add(parseSvgPathData(data));
       } catch (e) {
         debugPrint('Không thể phân tích SVG cho ${character.id}: $e');
       }
     }
+    referencePaths = parsed;
+    referenceBounds = _calculateBounds(parsed);
 
-    referencePaths = paths;
-    referenceBounds = _calculateBounds(paths);
+    final total = parsed.length;
+    final missing = missingCount.clamp(1, max(1, total));
+    preRenderedCount = max(0, total - missing);
+    expectedPaths = total == 0
+        ? const []
+        : parsed.sublist(preRenderedCount, parsed.length);
     if (expectedPaths.isEmpty) {
       canContinue.value = true;
     }
@@ -72,8 +81,6 @@ class WritingPracticeController extends GetxController {
     final height = bounds.height == 0 ? 1.0 : bounds.height;
     return Rect.fromLTWH(bounds.left, bounds.top, width, height);
   }
-
-  List<Path> get expectedPaths => referencePaths;
 
   void onStrokeMatched(int count) {
     matchedCount.value = count;
@@ -100,12 +107,11 @@ class WritingPracticeController extends GetxController {
     if (!canContinue.value) {
       return;
     }
-    session.markStepCompleted('trace');
+    session.markStepCompleted('missing');
     Get.toNamed(
-      Routes.missingStroke,
+      Routes.buildHanzi,
       arguments: {
         'character': character,
-        'missingCount': character.missingCount,
       },
     );
   }

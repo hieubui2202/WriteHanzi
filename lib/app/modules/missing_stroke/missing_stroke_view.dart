@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'writing_practice_controller.dart';
-import 'widgets/hanzi_canvas.dart';
+import 'missing_stroke_controller.dart';
+import '../writing_practice/widgets/hanzi_canvas.dart';
 
-class WritingPracticeView extends GetView<WritingPracticeController> {
-  const WritingPracticeView({super.key});
+class MissingStrokePage extends GetView<MissingStrokeController> {
+  const MissingStrokePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Luyện viết: ${controller.character.character}'),
+        title: const Text('Hoàn thiện chữ Hán'),
         elevation: 1,
       ),
       body: SafeArea(
         child: Column(
           children: [
-            _buildCharacterHeader(context),
+            _buildHeader(context),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -44,6 +44,7 @@ class WritingPracticeView extends GetView<WritingPracticeController> {
                             referenceBounds: controller.referenceBounds,
                             strokeColor: const Color(0xFF1F1F1F),
                             strokeWidth: 7,
+                            preRenderedCount: controller.preRenderedCount,
                             expectPaths: controller.expectedPaths,
                             onStrokeMatched: controller.onStrokeMatched,
                             onStrokeRejected: controller.onStrokeRejected,
@@ -62,7 +63,7 @@ class WritingPracticeView extends GetView<WritingPracticeController> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              '${controller.matchedCount.value}/${controller.expectedPaths.length} nét',
+                              '${controller.matchedCount.value}/${controller.expectedPaths.length} nét thiếu',
                               style: Theme.of(context)
                                   .textTheme
                                   .labelLarge
@@ -76,15 +77,14 @@ class WritingPracticeView extends GetView<WritingPracticeController> {
                 ),
               ),
             ),
-            _buildControlPanel(context),
+            _buildControls(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCharacterHeader(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget _buildHeader(BuildContext context) {
     final display = controller.character.word.isNotEmpty
         ? controller.character.word
         : controller.character.character;
@@ -92,21 +92,21 @@ class WritingPracticeView extends GetView<WritingPracticeController> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            display,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            "Finish the hanzi for ‘$display’",
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
-            '${controller.character.pinyin} • ${controller.character.meaning}',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: Colors.grey.shade700,
-            ),
+            'Vẽ các nét còn thiếu theo gợi ý.',
+            style: Theme.of(context)
+                .textTheme
+                .bodyLarge
+                ?.copyWith(color: Colors.grey.shade700),
             textAlign: TextAlign.center,
           ),
         ],
@@ -114,7 +114,7 @@ class WritingPracticeView extends GetView<WritingPracticeController> {
     );
   }
 
-  Widget _buildControlPanel(BuildContext context) {
+  Widget _buildControls(BuildContext context) {
     final theme = Theme.of(context);
     return Obx(() {
       final canContinue = controller.canContinue.value;
