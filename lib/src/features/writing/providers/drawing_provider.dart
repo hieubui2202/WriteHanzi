@@ -1,6 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:path_drawing/path_drawing.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4;

@@ -73,13 +73,16 @@ class _AdminScreenState extends State<AdminScreen> {
         final character = HanziCharacter(
           id: parts[0], // Use hanzi as ID
           hanzi: parts[0],
-          unitId: parts[1],
-          pinyin: parts[5],
-          meaning: parts[4],
-          ttsUrl: parts[6],
+          unitId: parts.length > 1 ? parts[1] : '',
+          pinyin: parts.length > 5 ? parts[5] : '',
+          meaning: parts.length > 4 ? parts[4] : '',
+          ttsUrl: parts.length > 6 && parts[6].isNotEmpty ? parts[6] : null,
+          word: parts.length > 2 && parts[2].isNotEmpty ? parts[2] : null,
+          strokes: parts.length > 3 ? int.tryParse(parts[3]) : null,
+          svgList: paths,
           strokeData: StrokeData(
-            width: int.tryParse(parts[7]) ?? 109,
-            height: int.tryParse(parts[8]) ?? 109,
+            width: parts.length > 7 ? int.tryParse(parts[7]) ?? 109 : 109,
+            height: parts.length > 8 ? int.tryParse(parts[8]) ?? 109 : 109,
             paths: paths,
           ),
         );

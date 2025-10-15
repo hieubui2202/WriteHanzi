@@ -4,21 +4,29 @@ import '../logic/writing_recognizer.dart';
 import '../widgets/writing_canvas.dart';
 
 class WritingPracticeScreen extends StatefulWidget {
-  final HanziCharacter character;
+  final HanziCharacter? character;
 
-  const WritingPracticeScreen({super.key, required this.character});
+  const WritingPracticeScreen({super.key, this.character});
 
   @override
   State<WritingPracticeScreen> createState() => _WritingPracticeScreenState();
 }
 
 class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
+  late final HanziCharacter _character;
   final GlobalKey<WritingCanvasState> _canvasKey = GlobalKey<WritingCanvasState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _character = widget.character ?? HanziCharacter.demo();
+  }
 
   void _checkWriting() {
     final userStrokes = _canvasKey.currentState?.strokes;
     if (userStrokes != null) {
-      final score = WritingRecognizer.calculateScore(userStrokes, widget.character.strokeData);
+      final score =
+          WritingRecognizer.calculateScore(userStrokes, _character.strokeData);
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -45,7 +53,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Luyện viết: ${widget.character.hanzi}'),
+        title: Text('Luyện viết: ${_character.hanzi}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.clear),
@@ -61,7 +69,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              '${widget.character.pinyin} - ${widget.character.meaning}',
+              '${_character.pinyin} - ${_character.meaning}',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
           ),
@@ -76,11 +84,11 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
                   // Add a faint background of the character
                   image: DecorationImage(
                     image: NetworkImage(
-                      'https://raw.githubusercontent.com/skishore/makemeahanzi/master/graphics/${widget.character.hanzi}.png',
+                      'https://raw.githubusercontent.com/skishore/makemeahanzi/master/graphics/${_character.hanzi}.png',
                     ),
                     fit: BoxFit.contain,
                     colorFilter: ColorFilter.mode(
-                      Colors.grey.withOpacity(0.2),
+                      Colors.grey.withValues(alpha: 0.2),
                       BlendMode.dstIn,
                     ),
                   ),
