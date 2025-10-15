@@ -6,6 +6,7 @@ import '../../../models/unit.dart';
 import '../../../models/hanzi_character.dart';
 import '../../../models/user_profile.dart';
 import '../../../repositories/character_repository.dart';
+import '../../../repositories/unit_repository.dart';
 import '../../../features/auth/services/auth_service.dart';
 import '../../../features/auth/services/progress_service.dart';
 
