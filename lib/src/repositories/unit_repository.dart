@@ -17,6 +17,15 @@ class UnitRepository {
     });
   }
 
+  Stream<Unit?> getUnitById(String id) {
+    return _unitsCollection.doc(id).snapshots().map((snapshot) {
+      if (!snapshot.exists || snapshot.data() == null) {
+        return null;
+      }
+      return Unit.fromMap(snapshot.data()!, id: snapshot.id);
+    });
+  }
+
   // Admin function to add a unit
   Future<void> addUnit(Unit unit) {
     return _unitsCollection.doc(unit.id).set(unit.toMap());

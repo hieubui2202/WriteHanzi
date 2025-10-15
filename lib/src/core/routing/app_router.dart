@@ -30,11 +30,20 @@ class AppRouter {
               GoRoute(
                   path: 'unit/:unitId',
                   builder: (context, state) {
-                    final unit = state.extra as Unit?;
-                    if (unit != null) {
-                      return UnitDetailsScreen(unit: unit);
+                    final unitId = state.pathParameters['unitId'];
+                    if (unitId == null) {
+                      return const Scaffold(
+                        body: Center(child: Text('Lỗi: không tìm thấy bài học')),
+                      );
                     }
-                    return const Scaffold(body: Center(child: Text('Lỗi: không tìm thấy bài học')));
+
+                    final extra = state.extra;
+                    final Unit? initialUnit = extra is Unit ? extra : null;
+
+                    return UnitDetailsScreen(
+                      unitId: unitId,
+                      initialUnit: initialUnit,
+                    );
                   },
                   routes: [
                     GoRoute(
