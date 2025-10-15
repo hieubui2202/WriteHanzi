@@ -263,8 +263,15 @@ class DrawingProvider with ChangeNotifier {
     }
 
     if (changed) {
-      _strokeProgress[idx] =
-          hits.where((hit) => hit).length / hits.length;
+      var prefixHits = 0;
+      for (var i = 0; i < hits.length; i++) {
+        if (!hits[i]) {
+          break;
+        }
+        prefixHits++;
+      }
+
+      _strokeProgress[idx] = prefixHits / hits.length;
     }
 
     return changed;
