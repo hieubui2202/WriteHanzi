@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'package:myapp/app/routes/app_routes.dart';
+import 'package:myapp/app/routes/app_pages.dart';
 import 'package:myapp/presentation/controllers/practice_flow_controller.dart';
 import 'package:myapp/presentation/pages/practice_style.dart';
 

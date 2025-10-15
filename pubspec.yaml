@@ -25,6 +25,7 @@ dependencies:
   path_drawing: ^1.0.1
   get: ^4.7.2
   vector_math: ^2.1.4
+  just_audio: ^0.9.40
 
 dev_dependencies:
   flutter_test:

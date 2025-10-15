@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:path_drawing/path_drawing.dart';
 import 'package:vector_math/vector_math_64.dart' as vmath;
 
 import 'package:myapp/core/stroke_engine.dart';
@@ -319,16 +320,16 @@ class _HanziCanvasPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 12
       ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..pathEffect = ui.PathEffect.dashPath(const <double>[12, 12]);
+      ..strokeJoin = StrokeJoin.round;
 
     for (int i = 0; i < paths.length; i++) {
       if (matched.contains(i)) {
         continue;
       }
-      final matrix = vmath.Matrix4.identity()
-        ..scale(size.width, size.height);
-      canvas.drawPath(paths[i].transform(matrix.storage), ghostPaint);
+      final matrix = vmath.Matrix4.identity()..scale(size.width, size.height);
+      final transformed = paths[i].transform(matrix.storage);
+      final dashed = dashPath(transformed, dashArray: CircularIntervalList<double>(const <double>[12, 12]));
+      canvas.drawPath(dashed, ghostPaint);
     }
   }
 
