@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import 'firebase_options.dart';
+import 'src/features/lesson_flow/character_lesson_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -249,7 +250,13 @@ class CharacterCard extends StatelessWidget {
         return Card(
           elevation: 4.0,
           child: InkWell(
-            onTap: () { /* Handle card tap */ },
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => CharacterLessonScreen(characterId: characterId),
+                ),
+              );
+            },
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
