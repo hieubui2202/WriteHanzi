@@ -1,103 +1,61 @@
 
-# Blueprint: Hanzi Writing Trainer
+# Blueprint: Flutter Learning App
 
-## 1. Tổng quan
+## Overview
 
-**Mục đích:** Xây dựng một ứng dụng Flutter giúp người dùng học viết ký tự tiếng Hán (Hanzi). Ứng dụng sẽ sử dụng Firebase cho các tính năng backend bao gồm xác thực, cơ sở dữ liệu, lưu trữ và hosting.
+This application is a Duolingo-inspired learning app. It started with a Firebase authentication feature and is now expanding to include a character writing practice module.
 
-**Các tính năng chính:**
-- Xác thực người dùng qua Google, Email/Password, và Anonymous.
-- Hiển thị các bài học (Units) và các ký tự (Characters) trong mỗi bài.
-- Theo dõi tiến độ học tập của người dùng (XP, streak, progress).
-- Giao diện người dùng hiện đại, thân thiện và có thể tùy chỉnh theme (Sáng/Tối).
-- Màn hình luyện viết tương tác.
+## Implemented Features (v1)
 
-## 2. Thiết kế và Kiến trúc
+*   **Firebase Authentication:**
+    *   User login via Google Sign-In.
+    *   A home page displaying the user's name and email after successful login.
+    *   A sign-out button.
+*   **Core Backend Setup:**
+    *   Firebase Core, Auth, Google Sign-In.
+    *   Firestore Database for storing user data (though not fully utilized yet).
 
-### Cấu trúc thư mục
-```
-/lib
-  /src
-    /core
-      /routing          # Cấu hình GoRouter
-      /theme            # Theme và style
-    /features
-      /auth
-        /screens        # Màn hình đăng nhập, đăng ký
-        /services       # Logic xác thực với Firebase Auth
-      /home
-        /screens        # Màn hình chính, chi tiết bài học
-        /widgets        # Widget chuyên cho màn hình home
-      /writing
-        /screens        # Màn hình luyện viết
-        /widgets        # Widget cho canvas, điều khiển
-    /models             # Data models (User, Unit, Character)
-    /repositories       # Tương tác với Firestore
-    /shared_widgets     # Các widget dùng chung
-  /main.dart            # Entry point
-/blueprint.md           # Tài liệu này
-/firestore.rules        # Quy tắc bảo mật Firestore
-/storage.rules          # Quy tắc bảo mật Storage
-/firebase.json          # Cấu hình Firebase Hosting
-```
+## Current Plan: Duolingo-style Writing Practice
 
-### Quản lý Trạng thái (State Management)
-- **Provider**: Dùng để quản lý trạng thái xác thực (`AuthService`) và theme (`ThemeProvider`) trên toàn ứng dụng.
-- **ChangeNotifier**: Các service và provider sẽ dùng `ChangeNotifier` để thông báo cho UI khi có sự thay đổi.
+This plan outlines the creation of a new feature: a multi-step writing practice module for learning Hanzi characters, inspired by the Duolingo UI.
 
-### Điều hướng (Navigation)
-- **GoRouter**: Được sử dụng để quản lý điều hướng một cách khai báo, hỗ trợ deep linking và chuyển hướng tự động dựa trên trạng thái đăng nhập.
+### 1. New Screen: `WritingPracticeScreen`
 
-### Thiết kế (Design)
-- **Material 3**: Sử dụng các thành phần và nguyên tắc thiết kế của Material 3.
-- **Google Fonts**: Tích hợp font chữ tùy chỉnh để tạo sự nhất quán và thẩm mỹ.
-- **Theme Sáng/Tối**: Hỗ trợ cả hai chế độ hiển thị và cho phép người dùng chuyển đổi.
+*   A new, dedicated screen will be created to house the learning experience.
+*   It will be a stateful widget to manage the user's progress through the different steps of the lesson.
+*   The UI will feature a dark theme with blue accent colors, mimicking the provided screenshots.
 
-## 3. Kế hoạch triển khai (Hiện tại)
+### 2. Lesson Flow for the character "茶" (tea)
 
-### Giai đoạn 1: Hoàn thành (Nền tảng ứng dụng)
-- **[X] Thiết lập môi trường và cấu trúc dự án.**
-- **[X] Cấu hình Firebase và kết nối ứng dụng.**
-- **[X] Xây dựng lõi ứng dụng (main, theme, router).**
-- **[X] Xây dựng luồng xác thực người dùng (Google, Anonymous, Email).**
-- **[X] Hiển thị danh sách bài học và chi tiết bài học từ Firestore.**
-- **[X] Tạo trang admin đơn giản để nạp dữ liệu ban đầu (seeding).**
+The module will guide the user through a series of exercises in a specific order:
 
-### Giai đoạn 2: Tính năng cốt lõi (Đang triển khai)
+1.  **Step 1: Select Meaning (Multiple Choice)**
+    *   Question: "Select the correct meaning".
+    *   Character: "茶".
+    *   Options: ["tea", "coffee", "add"].
+    *   Correct Answer: "tea".
 
-#### **Bước 1: Cá nhân hóa và Hiển thị thông tin người dùng**
-- **Mục tiêu**: Hiển thị thông tin người dùng đã đăng nhập trên màn hình chính để tăng tính cá nhân hóa.
-- **Công việc**:
-    1.  Tạo widget `UserProfileHeader` trong `lib/src/features/home/widgets/`.
-    2.  Widget này sẽ sử dụng `Provider` để lấy thông tin `UserProfile` hiện tại.
-    3.  Hiển thị `CircleAvatar` với ảnh đại diện của người dùng (lấy từ `photoURL`). Nếu không có, hiển thị icon mặc định.
-    4.  Hiển thị tên (`displayName`) và có thể cả email của người dùng.
-    5.  Thêm widget này vào `HomeScreen`.
+2.  **Step 2: Trace the Character (Interactive)**
+    *   A faint outline of the character "茶" will be displayed.
+    *   The user will be able to draw on the screen, tracing the strokes of the character. This will be implemented using `CustomPainter` and `GestureDetector`.
 
-#### **Bước 2: Xây dựng hệ thống theo dõi tiến độ học tập**
-- **Mục tiêu**: Ghi nhận và hiển thị sự tiến bộ của người dùng.
-- **Công việc**:
-    1.  **Cập nhật Model**: Mở rộng `UserProfile` model để bao gồm `xp` (kinh nghiệm), `streak` (chuỗi ngày học), và `progress` (một map lưu tiến độ cho từng ký tự, ví dụ: `{'characterId': 'completed'}`).
-    2.  **Logic cập nhật**: Sau khi người dùng hoàn thành một bài luyện viết (sẽ được xây dựng ở màn hình `WritingScreen`), cập nhật các trường này trong Firestore.
-    3.  **Hiển thị tiến độ**:
-        -   Hiển thị tổng XP và streak trong `UserProfileHeader`.
-        -   Trên `UnitDetailsScreen`, thêm một chỉ báo (ví dụ: `Icon(Icons.check_circle)`) bên cạnh các ký tự đã được hoàn thành.
+3.  **Step 3: Build the Character (Component Selection)**
+    *   Question: "Build the hanzi for 'tea'".
+    *   The user will be presented with the constituent radicals/parts of the character: `艹`, `人`, `木`.
+    *   The user must select them in the correct order to form "茶".
 
-#### **Bước 3: Hoàn thiện màn hình luyện viết**
-- **Mục tiêu**: Tạo một trải nghiệm luyện viết tương tác và hiệu quả.
-- **Công việc**:
-    1.  **Tạo `WritingScreen`**: Màn hình này sẽ nhận một `HanziCharacter` làm tham số.
-    2.  **Sử dụng `flutter_custom_painter`**: Tạo một widget `WritingCanvas` để:
-        -   Hiển thị ký tự mẫu (mờ) ở nền.
-        -   Cho phép người dùng vẽ lên trên bằng cách chạm và kéo.
-        -   Có các nút để xóa và kiểm tra nét vẽ.
-    3.  **(Nâng cao) Nhận diện nét vẽ**: So sánh nét vẽ của người dùng với dữ liệu nét vẽ chuẩn của ký tự (cần tìm thư viện hoặc API hỗ trợ).
-    4.  **Cập nhật tiến độ**: Khi người dùng viết đúng, gọi `Repository` để cập nhật tiến độ trong `UserProfile`.
+4.  **Step 4: Write from Memory (Interactive)**
+    *   A blank canvas will be provided.
+    *   The user must write the character "茶" from memory.
 
-### Giai đoạn 3: Đánh bóng và Mở rộng (Tương lai)
-- **Mục tiêu**: Nâng cao trải nghiệm người dùng và thêm các tính năng bổ sung.
-- **Công việc**:
-    -   Thêm hoạt ảnh (animations) và hiệu ứng chuyển cảnh.
-    -   Cải thiện thiết kế và trợ năng (accessibility).
-    -   Xây dựng bảng xếp hạng (leaderboard) người dùng dựa trên XP.
-    -   Thêm các cấp độ khó khác nhau cho bài học.
+### 3. UI Components to be Built
+
+*   **`LessonProgressBar`**: A visual indicator at the top of the screen showing progress through the steps.
+*   **`MultipleChoiceWidget`**: A reusable widget for meaning and pronunciation questions.
+*   **`CharacterCanvas`**: A custom widget using `CustomPainter` for the tracing and writing exercises.
+*   **`CharacterBuilderWidget`**: A widget for the component selection exercise.
+
+### 4. Navigation
+
+*   A new button, "Start Writing Practice," will be added to the `HomePage` to navigate to the `WritingPracticeScreen`.
+

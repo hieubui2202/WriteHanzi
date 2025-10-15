@@ -10,6 +10,7 @@ import 'package:myapp/src/features/home/screens/unit_details_screen.dart';
 import 'package:myapp/src/features/writing/screens/writing_screen.dart';
 import 'package:myapp/src/models/hanzi_character.dart';
 import 'package:myapp/src/models/unit.dart';
+import 'package:myapp/src/features/writing_practice/writing_practice_screen.dart';
 
 class AppRouter {
   final BuildContext context;
@@ -68,6 +69,10 @@ class AppRouter {
                       },
                     )
                   ]),
+               GoRoute(
+                path: 'practice',
+                builder: (context, state) => const WritingPracticeScreen(),
+              ),
             ]),
         GoRoute(
           path: '/login',

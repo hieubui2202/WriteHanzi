@@ -71,6 +71,7 @@ class _AdminScreenState extends State<AdminScreen> {
             .toList();
 
         final character = HanziCharacter(
+          id: parts[0], // Use hanzi as ID
           hanzi: parts[0],
           unitId: parts[1],
           pinyin: parts[5],

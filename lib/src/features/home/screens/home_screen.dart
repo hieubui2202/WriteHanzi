@@ -30,6 +30,18 @@ class HomeScreen extends StatelessWidget {
         children: [
           const UserProfileHeader(),
           const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.brush),
+              label: const Text('Luyện viết (Thử nghiệm)'),
+              onPressed: () => context.go('/practice'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48), // Make button wider
+              ),
+            ),
+          ),
+          const Divider(height: 1),
           Expanded(
             child: StreamBuilder<List<Unit>>(
               stream: UnitRepository().getUnits(),
