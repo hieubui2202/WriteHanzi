@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:path_drawing/path_drawing.dart';
 
@@ -59,8 +60,8 @@ class MissingStrokeController extends GetxController {
     referenceBounds = _calculateBounds(parsed);
 
     final total = parsed.length;
-    final missing = missingCount.clamp(1, max(1, total));
-    preRenderedCount = max(0, total - missing);
+    final missing = missingCount.clamp(1, max(1, total)).toInt();
+    preRenderedCount = max(0, total - missing).toInt();
     expectedPaths = total == 0
         ? const []
         : parsed.sublist(preRenderedCount, parsed.length);
