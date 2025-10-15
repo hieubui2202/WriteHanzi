@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/src/features/writing/logic/writing_recognizer.dart';
-import 'package:myapp/src/features/writing/widgets/writing_canvas.dart';
-import 'package:myapp/src/models/hanzi_character.dart';
+import '../../../models/hanzi_character.dart';
+import '../logic/writing_recognizer.dart';
+import '../widgets/writing_canvas.dart';
 
 class WritingPracticeScreen extends StatefulWidget {
   final HanziCharacter character;
@@ -13,12 +13,12 @@ class WritingPracticeScreen extends StatefulWidget {
 }
 
 class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
-  final GlobalKey<WritingCanvasState> _canvasKey = GlobalKey<WritingCanvasState>();
+  final GlobalKey<_WritingCanvasState> _canvasKey = GlobalKey<_WritingCanvasState>();
 
   void _checkWriting() {
-    final strokes = _canvasKey.currentState?.strokes;
-    if (strokes != null) {
-      final score = WritingRecognizer.calculateScore(strokes, widget.character.strokeData);
+    final userStrokes = _canvasKey.currentState?._strokes;
+    if (userStrokes != null) {
+      final score = WritingRecognizer.calculateScore(userStrokes, widget.character.strokeData);
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -37,8 +37,12 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
     }
   }
 
-  void _undoStroke() {
-    _canvasKey.currentState?.undo();
+   void _undoStroke() {
+    if (_canvasKey.currentState!._strokes.isNotEmpty) {
+      setState(() {
+         _canvasKey.currentState!._strokes.removeLast();
+      });
+    }
   }
 
   @override
@@ -50,7 +54,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
           IconButton(
             icon: const Icon(Icons.clear),
             onPressed: () {
-              _canvasKey.currentState?.clearCanvas();
+              _canvasKey.currentState?._clearCanvas();
             },
             tooltip: 'Clear Canvas',
           ),
@@ -75,12 +79,10 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
                   borderRadius: BorderRadius.circular(8.0),
                   // Add a faint background of the character
                   image: DecorationImage(
-                    image: NetworkImage(
-                      'https://raw.githubusercontent.com/skishore/makemeahanzi/master/graphics/${widget.character.hanzi}.png',
-                    ),
+                    image: NetworkImage('https://raw.githubusercontent.com/skishore/makemeahanzi/master/graphics/${widget.character.hanzi}.png'),
                     fit: BoxFit.contain,
                     colorFilter: ColorFilter.mode(Colors.grey.withOpacity(0.2), BlendMode.dstIn),
-                  ),
+                  )
                 ),
                 child: WritingCanvas(key: _canvasKey),
               ),

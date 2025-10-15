@@ -1,33 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
-import 'package:myapp/src/data/fallback_content.dart';
-import 'package:myapp/src/models/unit.dart';
+import '../models/unit.dart';
 
 class UnitRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final CollectionReference _unitsCollection = FirebaseFirestore.instance.collection('units');
 
-  Stream<List<Unit>> getUnits() async* {
-    try {
-      await for (final snapshot in _unitsCollection.snapshots()) {
-        if (snapshot.docs.isEmpty) {
-          debugPrint('No units returned from Firestore, using bundled fallback content.');
-          yield FallbackContent.units;
-          continue;
-        }
-
-        final units = snapshot.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return Unit.fromFirestore(doc.id, data);
-        }).toList()
-          ..sort((a, b) => a.order.compareTo(b.order));
-
-        yield units;
-      }
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load units from Firestore: $error\n$stackTrace');
-      yield FallbackContent.units;
-    }
+  Stream<List<Unit>> getUnits() {
+    return _unitsCollection.orderBy('order').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => Unit.fromJson(doc.data() as Map<String, dynamic>)).toList();
+    });
   }
 
   // Admin function to add a unit

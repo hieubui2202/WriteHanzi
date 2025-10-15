@@ -1,31 +1,19 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class WritingCanvas extends StatefulWidget {
   const WritingCanvas({super.key});
 
   @override
-  WritingCanvasState createState() => WritingCanvasState();
+  State<WritingCanvas> createState() => _WritingCanvasState();
 }
 
-class WritingCanvasState extends State<WritingCanvas> {
+class _WritingCanvasState extends State<WritingCanvas> {
   List<List<Offset?>> _strokes = [];
 
-  List<List<Offset?>> get strokes => _strokes;
-
-  void clearCanvas() {
+  void _clearCanvas() {
     setState(() {
       _strokes = [];
     });
-  }
-
-  void undo() {
-    if (_strokes.isNotEmpty) {
-      setState(() {
-        _strokes.removeLast();
-      });
-    }
   }
 
   @override
@@ -43,12 +31,12 @@ class WritingCanvasState extends State<WritingCanvas> {
       },
       onPanEnd: (details) {
         setState(() {
-          _strokes.last.add(null); // End of a stroke
+           _strokes.last.add(null); // End of a stroke
         });
       },
       child: CustomPaint(
         painter: _CanvasPainter(_strokes),
-        child: const SizedBox.expand(),
+        child: Container(), // The canvas needs a size
       ),
     );
   }
@@ -71,8 +59,8 @@ class _CanvasPainter extends CustomPainter {
         if (stroke[i] != null && stroke[i + 1] != null) {
           canvas.drawLine(stroke[i]!, stroke[i + 1]!, paint);
         } else if (stroke[i] != null && stroke[i + 1] == null) {
-          canvas.drawPoints(PointMode.points, [stroke[i]!], paint..strokeWidth = 8.0);
-        }
+          canvas.drawPoints(PointMode.points, [stroke[i]!], paint..strokeWidth = 8.0 );
+        } 
       }
     }
   }

@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:myapp/src/models/hanzi_character.dart';
+import 'package:hanzi_trainer/src/models/hanzi_character.dart';
 
 class WritingRecognizer {
   // A simple recognizer based on point-to-point distance.
