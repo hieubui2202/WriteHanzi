@@ -173,14 +173,22 @@ class HomeScreen extends StatelessWidget {
             itemCount: units.length,
             itemBuilder: (context, index) {
               final unit = units[index];
-              // Safely access data
-              final data = unit.data() as Map<String, dynamic>? ?? {};
-              final unitName = data['unitName'] as String? ?? 'Unnamed Unit';
-              final unitId = unit.id;
-              
+              final data = unit.data() as Map<String, dynamic>? ?? const <String, dynamic>{};
+
+              final unitName = (data['title'] ??
+                      data['name'] ??
+                      data['unitName'] ??
+                      data['sectionTitle'] ??
+                      unit.id)
+                  .toString();
+
               return ListTile(
-                title: Text(unitName, style: Theme.of(context).textTheme.titleLarge),
-                onTap: () => context.go('/unit/$unitId'),
+                title: Text(
+                  unitName.isEmpty ? unit.id : unitName,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                subtitle: _buildUnitSubtitle(context, data),
+                onTap: () => context.go('/unit/${unit.id}'),
               );
             },
           );
@@ -188,6 +196,18 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget? _buildUnitSubtitle(BuildContext context, Map<String, dynamic> data) {
+  final description = (data['description'] ?? data['sectionDescription'] ?? '').toString();
+  if (description.isEmpty) {
+    final orderValue = data['order'] ?? data['index'];
+    final orderText = orderValue == null ? null : orderValue.toString();
+    return orderText == null
+        ? null
+        : Text('Order: $orderText', style: Theme.of(context).textTheme.bodySmall);
+  }
+  return Text(description, style: Theme.of(context).textTheme.bodyMedium);
 }
 
 class UnitScreen extends StatelessWidget {
@@ -206,7 +226,24 @@ class UnitScreen extends StatelessWidget {
           if (!snapshot.hasData || !snapshot.data!.exists) return const Center(child: Text("Unit not found."));
 
           final unitData = snapshot.data!.data() as Map<String, dynamic>;
-          final characterIds = List<String>.from(unitData['characters'] ?? []);
+          final charactersField = unitData['characters'] ?? unitData['characterIds'] ?? unitData['words'];
+          final characterIds = <String>[];
+          if (charactersField is List) {
+            for (final entry in charactersField) {
+              if (entry == null) continue;
+              final value = entry.toString().trim();
+              if (value.isNotEmpty) {
+                characterIds.add(value);
+              }
+            }
+          } else if (charactersField is String && charactersField.isNotEmpty) {
+            characterIds.addAll(
+              charactersField
+                  .split(',')
+                  .map((value) => value.trim())
+                  .where((value) => value.isNotEmpty),
+            );
+          }
 
           return GridView.builder(
             padding: const EdgeInsets.all(16.0),
@@ -244,7 +281,9 @@ class CharacterCard extends StatelessWidget {
         
         // This is now safe
         final characterData = snapshot.data!.data() as Map<String, dynamic>;
-        final meaning = characterData['meaning'] as String? ?? '';
+        final hanzi = (characterData['hanzi'] ?? characterData['character'] ?? characterId).toString();
+        final pinyin = (characterData['pinyin'] ?? characterData['transliteration'] ?? '').toString();
+        final meaning = (characterData['meaning'] ?? characterData['translation'] ?? '').toString();
 
         return Card(
           elevation: 4.0,
@@ -254,8 +293,15 @@ class CharacterCard extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(characterId, style: Theme.of(context).textTheme.displayLarge),
-                  Text(meaning, style: Theme.of(context).textTheme.bodyMedium),
+                  Text(hanzi, style: Theme.of(context).textTheme.displayLarge),
+                  if (pinyin.isNotEmpty)
+                    Text(pinyin, style: Theme.of(context).textTheme.bodyMedium),
+                  if (meaning.isNotEmpty)
+                    Text(
+                      meaning,
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
                 ],
               ),
             ),
