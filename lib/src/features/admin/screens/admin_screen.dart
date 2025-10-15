@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import '../../../models/hanzi_character.dart';
 import '../../../models/unit.dart';
@@ -103,24 +105,37 @@ class _AdminScreenState extends State<AdminScreen> {
     try {
       final charRepo = CharacterRepository();
       final tsvData = _tsvController.text;
-      final lines = tsvData.split('
-');
+      final lines = LineSplitter.split(tsvData.trim())
+          .map((line) => line.trim())
+          .where((line) => line.isNotEmpty)
+          .toList();
 
       for (final line in lines) {
-        if (line.isEmpty) continue;
+        final parts = line.split('\t');
+        if (parts.length < 10) {
+          debugPrint('Skipping malformed TSV row: $line');
+          continue;
+        }
 
-        final parts = line.split('	');
+        final paths = parts[9]
+            .split('|')
+            .map((path) => path.trim())
+            .where((path) => path.isNotEmpty)
+            .toList();
+
         final character = HanziCharacter(
           hanzi: parts[0],
+          unitId: parts[1],
           pinyin: parts[5],
           meaning: parts[4],
-          unitId: parts[1],
+          ttsUrl: parts[6],
           strokeData: StrokeData(
-            width: int.parse(parts[7]),
-            height: int.parse(parts[8]),
-            paths: parts[9].split('|'),
+            width: int.tryParse(parts[7]) ?? 109,
+            height: int.tryParse(parts[8]) ?? 109,
+            paths: paths,
           ),
         );
+
         await charRepo.addCharacter(character);
       }
 
