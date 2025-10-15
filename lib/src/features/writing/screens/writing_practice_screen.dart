@@ -18,7 +18,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
   void _checkWriting() {
     final userStrokes = _canvasKey.currentState?.strokes;
     if (userStrokes != null) {
-      final score = WritingRecognizer.calculateScore(userStrokes, widget.character.strokeData);
+      final score = WritingRecognizer.calculateScore(userStrokes, widget.character.strokePaths);
       showDialog(
         context: context,
         builder: (context) => AlertDialog(

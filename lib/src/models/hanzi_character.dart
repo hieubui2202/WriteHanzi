@@ -1,57 +1,84 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'hanzi_character.g.dart';
-
-@JsonSerializable()
 class HanziCharacter {
-  @JsonKey(includeFromJson: false, includeToJson: false)
   final String id;
   final String hanzi;
   final String pinyin;
   final String meaning;
-  final String unitId;
+  final String? section;
+  final int? strokeCount;
   final String? ttsUrl;
-  final StrokeData strokeData;
+  final String? word;
+  final List<String> strokePaths;
 
   HanziCharacter({
-    this.id = '',
+    required this.id,
     required this.hanzi,
     required this.pinyin,
     required this.meaning,
-    required this.unitId,
+    this.section,
+    this.strokeCount,
     this.ttsUrl,
-    required this.strokeData,
-  });
+    this.word,
+    List<String>? strokePaths,
+  }) : strokePaths = List.unmodifiable(strokePaths ?? const []);
 
-  factory HanziCharacter.fromJson(Map<String, dynamic> json) => _$HanziCharacterFromJson(json);
-  Map<String, dynamic> toJson() => _$HanziCharacterToJson(this);
-
-  HanziCharacter copyWithId(String id) {
+  factory HanziCharacter.fromMap(Map<String, dynamic> data, {required String id}) {
     return HanziCharacter(
       id: id,
-      hanzi: this.hanzi,
-      pinyin: this.pinyin,
-      meaning: this.meaning,
-      unitId: this.unitId,
-      ttsUrl: this.ttsUrl,
-      strokeData: this.strokeData,
+      hanzi: data['character']?.toString().isNotEmpty == true
+          ? data['character'].toString()
+          : id,
+      pinyin: data['pinyin']?.toString() ?? '',
+      meaning: data['meaning']?.toString() ?? '',
+      section: data['section']?.toString(),
+      strokeCount: (data['strokes'] as num?)?.toInt(),
+      ttsUrl: data['ttsUrl']?.toString(),
+      word: data['word']?.toString(),
+      strokePaths: _parseStrokePaths(data),
     );
   }
-}
 
-@JsonSerializable()
-class StrokeData {
-  final int width;
-  final int height;
-  final List<String> paths;
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'character': hanzi,
+      'pinyin': pinyin,
+      'meaning': meaning,
+      if (section != null) 'section': section,
+      if (strokeCount != null) 'strokes': strokeCount,
+      if (ttsUrl != null) 'ttsUrl': ttsUrl,
+      if (word != null) 'word': word,
+      if (strokePaths.isNotEmpty) 'svgList': strokePaths,
+    };
+  }
 
-  StrokeData({
-    required this.width,
-    required this.height,
-    required this.paths,
-  });
+  static List<String> _parseStrokePaths(Map<String, dynamic> data) {
+    final svgList = data['svgList'];
+    if (svgList is List) {
+      return svgList.map((e) => e.toString()).toList();
+    }
+    if (svgList is String) {
+      return svgList
+          .split(RegExp(r'[|;,]'))
+          .map((e) => e.trim())
+          .where((element) => element.isNotEmpty)
+          .toList();
+    }
 
-  factory StrokeData.fromJson(Map<String, dynamic> json) => _$StrokeDataFromJson(json);
-  Map<String, dynamic> toJson() => _$StrokeDataToJson(this);
+    final strokeData = data['strokeData'];
+    if (strokeData is Map<String, dynamic>) {
+      final paths = strokeData['paths'];
+      if (paths is List) {
+        return paths.map((e) => e.toString()).toList();
+      }
+      if (paths is String) {
+        return paths
+            .split('|')
+            .map((e) => e.trim())
+            .where((element) => element.isNotEmpty)
+            .toList();
+      }
+    }
 
+    return const [];
+  }
 }

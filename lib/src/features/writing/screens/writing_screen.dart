@@ -77,7 +77,8 @@ class WritingScreen extends StatelessWidget {
         ),
         onPressed: () async {
           // Award 10 XP for each character completion
-          await progressService.completeCharacter(character.id, 10);
+          final progressKey = character.id.isNotEmpty ? character.id : character.hanzi;
+          await progressService.completeCharacter(progressKey, 10);
 
           // Show a confirmation dialog
           ScaffoldMessenger.of(context).showSnackBar(

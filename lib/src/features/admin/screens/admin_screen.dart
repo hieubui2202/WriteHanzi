@@ -32,83 +32,74 @@ class _AdminScreenState extends State<AdminScreen> {
       final charRepo = CharacterRepository();
 
       final unit1 = Unit(
-        id: 'unit1',
-        title: 'Cơ bản 1',
-        description: 'Các nét cơ bản và các ký tự đơn giản.',
-        order: 1,
+        id: 'section_1_unit_1',
+        section: 'Phần 1',
+        sectionIndex: 1,
+        unitNumber: 1,
         characters: const ['一', '二', '三', '十', '人'],
-        xpReward: 100,
+        words: const ['一', '二', '三', '十', '人'],
+        wordCount: 5,
       );
       await unitRepo.addUnit(unit1);
 
       final characters = <HanziCharacter>[
         HanziCharacter(
+          id: '一',
           hanzi: '一',
           pinyin: 'yī',
           meaning: 'một',
-          unitId: 'unit1',
-          strokeData: StrokeData(
-            width: 1024,
-            height: 1024,
-            paths: const ['M 54 511 c 102 0 799 1 915 1'],
-          ),
+          section: 'Phần 1',
+          strokeCount: 1,
+          strokePaths: const ['M 54 511 c 102 0 799 1 915 1'],
         ),
         HanziCharacter(
+          id: '二',
           hanzi: '二',
           pinyin: 'èr',
           meaning: 'hai',
-          unitId: 'unit1',
-          strokeData: StrokeData(
-            width: 1024,
-            height: 1024,
-            paths: const [
-              'M 163 260 c 237 0 541 1 699 1',
-              'M 103 540 c 260 0 653 1 818 1',
-            ],
-          ),
+          section: 'Phần 1',
+          strokeCount: 2,
+          strokePaths: const [
+            'M 163 260 c 237 0 541 1 699 1',
+            'M 103 540 c 260 0 653 1 818 1',
+          ],
         ),
         HanziCharacter(
+          id: '三',
           hanzi: '三',
           pinyin: 'sān',
           meaning: 'ba',
-          unitId: 'unit1',
-          strokeData: StrokeData(
-            width: 1024,
-            height: 1024,
-            paths: const [
-              'M 203 234 c 219 0 491 1 610 1',
-              'M 163 440 c 245 0 554 1 700 1',
-              'M 102 654 c 272 0 689 1 853 1',
-            ],
-          ),
+          section: 'Phần 1',
+          strokeCount: 3,
+          strokePaths: const [
+            'M 203 234 c 219 0 491 1 610 1',
+            'M 163 440 c 245 0 554 1 700 1',
+            'M 102 654 c 272 0 689 1 853 1',
+          ],
         ),
         HanziCharacter(
+          id: '十',
           hanzi: '十',
           pinyin: 'shí',
           meaning: 'mười',
-          unitId: 'unit1',
-          strokeData: StrokeData(
-            width: 1024,
-            height: 1024,
-            paths: const [
-              'M 152 491 c 252 0 598 1 744 1',
-              'M 444 141 c 1 113 1 677 0 803',
-            ],
-          ),
+          section: 'Phần 1',
+          strokeCount: 2,
+          strokePaths: const [
+            'M 152 491 c 252 0 598 1 744 1',
+            'M 444 141 c 1 113 1 677 0 803',
+          ],
         ),
         HanziCharacter(
+          id: '人',
           hanzi: '人',
           pinyin: 'rén',
           meaning: 'người',
-          unitId: 'unit1',
-          strokeData: StrokeData(
-            width: 1024,
-            height: 1024,
-            paths: const [
-              'M 503 162 c -72 138 -225 352 -335 504',
-              'M 515 163 c 101 133 283 392 371 529',
-            ],
-          ),
+          section: 'Phần 1',
+          strokeCount: 2,
+          strokePaths: const [
+            'M 503 162 c -72 138 -225 352 -335 504',
+            'M 515 163 c 101 133 283 392 371 529',
+          ],
         ),
       ];
 
@@ -150,20 +141,23 @@ class _AdminScreenState extends State<AdminScreen> {
         if (line.trim().isEmpty) continue;
 
         final parts = line.split('\t');
-        if (parts.length < 10) {
+        if (parts.length < 6) {
           continue;
         }
 
         final character = HanziCharacter(
+          id: parts[0],
           hanzi: parts[0],
           pinyin: parts[5],
           meaning: parts[4],
-          unitId: parts[1],
-          strokeData: StrokeData(
-            width: int.tryParse(parts[7]) ?? 1024,
-            height: int.tryParse(parts[8]) ?? 1024,
-            paths: parts[9].split('|'),
-          ),
+          section: parts[1],
+          strokePaths: parts.length > 9
+              ? parts[9]
+                  .split('|')
+                  .map((e) => e.trim())
+                  .where((element) => element.isNotEmpty)
+                  .toList()
+              : const [],
         );
         await charRepo.addCharacter(character);
       }

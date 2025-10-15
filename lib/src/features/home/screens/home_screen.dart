@@ -52,8 +52,8 @@ class HomeScreen extends StatelessWidget {
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: ListTile(
-                        title: Text(unit.title),
-                        subtitle: Text(unit.description),
+                        title: Text(unit.displayTitle),
+                        subtitle: Text(unit.subtitle),
                         trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           context.go('/unit/${unit.id}', extra: unit);

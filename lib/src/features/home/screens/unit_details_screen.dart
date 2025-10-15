@@ -21,10 +21,10 @@ class UnitDetailsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(unit.title),
+        title: Text(unit.displayTitle),
       ),
       body: StreamBuilder<List<HanziCharacter>>(
-        stream: CharacterRepository().getCharactersForUnit(unit.id),
+        stream: CharacterRepository().getCharactersByIds(unit.characters),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -47,7 +47,8 @@ class UnitDetailsScreen extends StatelessWidget {
                 itemCount: characters.length,
                 itemBuilder: (context, index) {
                   final character = characters[index];
-                  final bool isCompleted = userProfile?.progress[character.id] == 'completed';
+                  final progressKey = character.id.isNotEmpty ? character.id : character.hanzi;
+                  final bool isCompleted = userProfile?.progress[progressKey] == 'completed';
 
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -59,8 +60,8 @@ class UnitDetailsScreen extends StatelessWidget {
                           ? Icon(Icons.check_circle, color: Colors.green)
                           : const Icon(Icons.arrow_forward_ios),
                       onTap: () {
-                        // Navigate to the writing screen, passing the character object
-                        context.go('/unit/${unit.id}/write/${character.id}', extra: character);
+                        final navigationId = character.id.isNotEmpty ? character.id : character.hanzi;
+                        context.go('/unit/${unit.id}/write/$navigationId', extra: character);
                       },
                     ),
                   );

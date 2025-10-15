@@ -59,11 +59,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (_formKey.currentState!.validate()) {
                       final email = _emailController.text;
                       final password = _passwordController.text;
-                      if (_isLogin) {
-                        await authService.signInWithEmailAndPassword(email, password);
-                      } else {
-                        final displayName = _displayNameController.text;
-                        await authService.createUserWithEmailAndPassword(email, password, displayName);
+                      try {
+                        if (_isLogin) {
+                          await authService.signInWithEmailAndPassword(email, password);
+                        } else {
+                          final displayName = _displayNameController.text;
+                          await authService.createUserWithEmailAndPassword(email, password, displayName);
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(e.toString())),
+                          );
+                        }
                       }
                     }
                   },

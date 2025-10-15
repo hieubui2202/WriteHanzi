@@ -22,6 +22,10 @@ class ProgressService {
 
     final userRef = _firestore.collection('users').doc(user.uid);
 
+    if (characterId.isEmpty) {
+      return;
+    }
+
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(userRef);
 

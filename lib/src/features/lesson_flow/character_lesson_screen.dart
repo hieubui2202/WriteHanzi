@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../../models/hanzi_character.dart';
+
 class LessonStep {
   const LessonStep({
     required this.title,
@@ -72,9 +74,9 @@ class CharacterLessonScreen extends StatelessWidget {
             return const Center(child: Text('Character data not found.'));
           }
 
-          final characterData = snapshot.data!.data()!;
-          final meaning = characterData['meaning'] as String? ?? '';
-          final pinyin = characterData['pinyin'] as String? ?? '';
+          final characterDoc = snapshot.data!;
+          final characterData = characterDoc.data()!;
+          final character = HanziCharacter.fromMap(characterData, id: characterDoc.id);
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,12 +91,12 @@ class CharacterLessonScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      characterId,
+                      character.hanzi,
                       style: Theme.of(context).textTheme.displayLarge,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$meaning  •  $pinyin',
+                      '${character.meaning}  •  ${character.pinyin}',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
