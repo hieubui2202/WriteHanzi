@@ -57,9 +57,24 @@ class _TraceSegmentPageState extends State<TraceSegmentPage> {
             '${_matched}/1 segment traced',
             style: bodyStyle(fontSize: 14),
           ),
+          const SizedBox(height: 12),
+          hintCaption(text: 'Tap the canvas for the next cue. Double-tap to watch the motion.'),
           const SizedBox(height: 16),
           Row(
             children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => canvasKey.currentState?.showHint(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: practicePrimary,
+                    side: const BorderSide(color: practicePrimary),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Hint'),
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => canvasKey.currentState?.replay(),
@@ -69,7 +84,7 @@ class _TraceSegmentPageState extends State<TraceSegmentPage> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text('Replay'),
+                  child: const Text('Walkthrough'),
                 ),
               ),
               const SizedBox(width: 12),

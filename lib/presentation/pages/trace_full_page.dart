@@ -43,9 +43,24 @@ class _TraceFullPageState extends State<TraceFullPage> {
             '${_matchedCount}/${widget.character.svgList.length} strokes matched',
             style: bodyStyle(fontSize: 14),
           ),
+          const SizedBox(height: 12),
+          hintCaption(),
           const SizedBox(height: 16),
           Row(
             children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => canvasKey.currentState?.showHint(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: practicePrimary,
+                    side: const BorderSide(color: practicePrimary),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Hint'),
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => canvasKey.currentState?.replay(),
@@ -55,7 +70,7 @@ class _TraceFullPageState extends State<TraceFullPage> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text('Replay'),
+                  child: const Text('Walkthrough'),
                 ),
               ),
               const SizedBox(width: 12),
