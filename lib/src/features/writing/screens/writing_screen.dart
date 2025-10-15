@@ -67,7 +67,7 @@ class WritingScreen extends StatelessWidget {
             ),
             onPressed: drawingProvider.isComplete
                 ? () async {
-                    await progressService.completeCharacter(character.id, 10);
+                    await progressService.completeCharacter(character.progressKey, 10);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
