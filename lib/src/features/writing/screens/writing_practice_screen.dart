@@ -13,10 +13,10 @@ class WritingPracticeScreen extends StatefulWidget {
 }
 
 class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
-  final GlobalKey<_WritingCanvasState> _canvasKey = GlobalKey<_WritingCanvasState>();
+  final GlobalKey<WritingCanvasState> _canvasKey = GlobalKey<WritingCanvasState>();
 
   void _checkWriting() {
-    final userStrokes = _canvasKey.currentState?._strokes;
+    final userStrokes = _canvasKey.currentState?.strokes;
     if (userStrokes != null) {
       final score = WritingRecognizer.calculateScore(userStrokes, widget.character.strokeData);
       showDialog(
@@ -37,12 +37,8 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
     }
   }
 
-   void _undoStroke() {
-    if (_canvasKey.currentState!._strokes.isNotEmpty) {
-      setState(() {
-         _canvasKey.currentState!._strokes.removeLast();
-      });
-    }
+  void _undoStroke() {
+    _canvasKey.currentState?.undoLastStroke();
   }
 
   @override
@@ -54,7 +50,7 @@ class _WritingPracticeScreenState extends State<WritingPracticeScreen> {
           IconButton(
             icon: const Icon(Icons.clear),
             onPressed: () {
-              _canvasKey.currentState?._clearCanvas();
+              _canvasKey.currentState?.clearCanvas();
             },
             tooltip: 'Clear Canvas',
           ),
