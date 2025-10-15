@@ -1,11 +1,12 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:path_drawing/path_drawing.dart';
 import 'package:provider/provider.dart';
 
 import 'package:myapp/src/features/writing/providers/drawing_provider.dart';
 
-class WritingPad extends StatelessWidget {
+class WritingPad extends StatefulWidget {
   const WritingPad({
     super.key,
     required this.strokePaths,
@@ -22,17 +23,41 @@ class WritingPad extends StatelessWidget {
   final Color userStrokeColor;
 
   @override
+  State<WritingPad> createState() => _WritingPadState();
+}
+
+class _WritingPadState extends State<WritingPad> {
+  Size? _pendingCanvasSize;
+  bool _syncScheduled = false;
+
+  void _scheduleSync(DrawingProvider provider, Size canvasSize) {
+    _pendingCanvasSize = canvasSize;
+    if (_syncScheduled) {
+      return;
+    }
+    _syncScheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _syncScheduled = false;
+      if (!mounted) {
+        return;
+      }
+      final targetSize = _pendingCanvasSize ?? canvasSize;
+      provider.syncReference(
+        pathData: widget.strokePaths,
+        viewBox: widget.viewBox,
+        canvasSize: targetSize,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final provider = Provider.of<DrawingProvider>(context);
         final canvasSize = Size(constraints.maxWidth, constraints.maxHeight);
 
-        provider.syncReference(
-          pathData: strokePaths,
-          viewBox: viewBox,
-          canvasSize: canvasSize,
-        );
+        _scheduleSync(provider, canvasSize);
 
         return GestureDetector(
           onPanStart: (details) => provider.startLine(details.localPosition),
@@ -43,9 +68,9 @@ class WritingPad extends StatelessWidget {
               lines: provider.lines,
               referencePaths: provider.referencePaths,
               strokeProgress: provider.strokeProgress,
-              highlightColor: highlightColor,
-              baseStrokeColor: baseStrokeColor,
-              userStrokeColor: userStrokeColor,
+              highlightColor: widget.highlightColor,
+              baseStrokeColor: widget.baseStrokeColor,
+              userStrokeColor: widget.userStrokeColor,
             ),
             size: Size.infinite,
           ),
@@ -153,7 +178,7 @@ class _WritingPainter extends CustomPainter {
       canvas.drawPath(path, basePaint);
 
       final progress = i < strokeProgress.length ? strokeProgress[i].clamp(0.0, 1.0) : 0.0;
-      if (progress <= 0) {
+      if (progress <= 0 || progress >= 1.0) {
         continue;
       }
 

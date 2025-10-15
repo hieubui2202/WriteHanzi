@@ -56,11 +56,16 @@ class DrawingProvider with ChangeNotifier {
       return;
     }
 
+    final scale = math.min(
+      canvasSize.width / viewBox.width,
+      canvasSize.height / viewBox.height,
+    );
+    final dx = (canvasSize.width - (viewBox.width * scale)) / 2;
+    final dy = (canvasSize.height - (viewBox.height * scale)) / 2;
+
     final scaleMatrix = Matrix4.identity()
-      ..scale(
-        canvasSize.width / viewBox.width,
-        canvasSize.height / viewBox.height,
-      );
+      ..translate(dx, dy)
+      ..scale(scale, scale);
 
     _referencePaths = pathData
         .map((raw) => parseSvgPathData(raw).transform(scaleMatrix.storage))
@@ -157,18 +162,25 @@ class DrawingProvider with ChangeNotifier {
       return;
     }
 
-    _lines.last.add(null);
+    var shouldRemoveLine = false;
 
     if (_strokeProgress.isNotEmpty &&
         _currentStrokeIndex >= 0 &&
         _currentStrokeIndex < _strokeProgress.length) {
       if (_strokeProgress[_currentStrokeIndex] >= 0.9) {
         _strokeProgress[_currentStrokeIndex] = 1.0;
+        shouldRemoveLine = true;
       }
 
       _currentStrokeDrawn = 0;
       final nextStroke = _strokeProgress.indexWhere((value) => value < 1.0);
       _currentStrokeIndex = nextStroke == -1 ? _strokeProgress.length - 1 : nextStroke;
+    }
+
+    if (shouldRemoveLine) {
+      _lines.removeLast();
+    } else {
+      _lines.last.add(null);
     }
 
     notifyListeners();
@@ -244,11 +256,11 @@ class DrawingProvider with ChangeNotifier {
   }
 
   double _hitTolerance() {
-    final shortest = _canvasSize?.shortestSide ?? _viewBox?.shortestSide ?? 0;
-    if (shortest == 0) {
+    if (_canvasSize == null) {
       return 24;
     }
-    return shortest * 0.12;
+    final shortest = _canvasSize!.shortestSide;
+    return (shortest * 0.08).clamp(16.0, 36.0);
   }
 }
 
