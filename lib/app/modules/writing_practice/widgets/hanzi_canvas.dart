@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -49,6 +50,9 @@ class HanziCanvasState extends State<HanziCanvas> {
   Offset? _pointerStart;
   Offset? _pointerDirection;
   bool _showHint = false;
+  int? _flashStrokeIndex;
+  bool _flashVisible = false;
+  Timer? _flashTimer;
 
   @override
   void initState() {
@@ -106,6 +110,8 @@ class HanziCanvasState extends State<HanziCanvas> {
               hintIndex: _matchedCount,
               pointerStart: _pointerStart,
               pointerDirection: _pointerDirection,
+              highlightIndex: _flashStrokeIndex,
+              highlightVisible: _flashVisible,
             ),
             size: Size.infinite,
           ),
@@ -140,11 +146,16 @@ class HanziCanvasState extends State<HanziCanvas> {
       return;
     }
     if (_matchStroke(current)) {
+      final highlightIndex = (_preRenderedCount + _matchedCount).clamp(0, widget.referencePaths.length - 1);
       setState(() {
+        if (_lines.isNotEmpty) {
+          _lines.removeLast();
+        }
         _matchedCount += 1;
         widget.onStrokeMatched?.call(_matchedCount);
         _updatePointer();
       });
+      _triggerFlash(highlightIndex);
     } else {
       widget.onStrokeRejected?.call();
       _removeLastStroke();
@@ -171,6 +182,7 @@ class HanziCanvasState extends State<HanziCanvas> {
       _lines.clear();
       _matchedCount = 0;
       _updatePointer();
+      _cancelFlash();
     });
   }
 
@@ -318,6 +330,39 @@ class HanziCanvasState extends State<HanziCanvas> {
   bool get isComplete => _scaledExpectedPaths.isEmpty || _matchedCount >= _scaledExpectedPaths.length;
 
   int get matchedCount => _matchedCount;
+
+  void _triggerFlash(int? index) {
+    if (index == null || index < 0 || index >= widget.referencePaths.length) {
+      return;
+    }
+    _flashTimer?.cancel();
+    setState(() {
+      _flashStrokeIndex = index;
+      _flashVisible = true;
+    });
+    _flashTimer = Timer(const Duration(milliseconds: 420), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _flashVisible = false;
+        _flashStrokeIndex = null;
+      });
+    });
+  }
+
+  void _cancelFlash() {
+    _flashTimer?.cancel();
+    _flashTimer = null;
+    _flashStrokeIndex = null;
+    _flashVisible = false;
+  }
+
+  @override
+  void dispose() {
+    _cancelFlash();
+    super.dispose();
+  }
 
   PathMetric? _firstMetric(Path path) {
     final iterator = path.computeMetrics().iterator;

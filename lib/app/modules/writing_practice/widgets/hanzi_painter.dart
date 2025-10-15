@@ -18,6 +18,8 @@ class HanziPainter extends CustomPainter {
     this.hintIndex = 0,
     this.pointerStart,
     this.pointerDirection,
+    this.highlightIndex,
+    this.highlightVisible = false,
   });
 
   final List<List<Offset>> lines;
@@ -31,11 +33,14 @@ class HanziPainter extends CustomPainter {
   final int hintIndex;
   final Offset? pointerStart;
   final Offset? pointerDirection;
+  final int? highlightIndex;
+  final bool highlightVisible;
 
   @override
   void paint(Canvas canvas, Size size) {
     _drawGrid(canvas, size);
     _drawReference(canvas);
+    _drawHighlight(canvas);
     _drawHint(canvas);
     _drawUserLines(canvas);
     _drawPointer(canvas);
@@ -86,6 +91,34 @@ class HanziPainter extends CustomPainter {
       final paint = index < completedLimit ? solidPaint : faintPaint;
       canvas.drawPath(referencePaths[index], paint);
     }
+  }
+
+  void _drawHighlight(Canvas canvas) {
+    if (!highlightVisible || highlightIndex == null) {
+      return;
+    }
+    final index = highlightIndex!;
+    if (index < 0 || index >= referencePaths.length) {
+      return;
+    }
+
+    final glowPaint = Paint()
+      ..color = const Color(0xFF18E06F).withOpacity(0.85)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = strokeWidth + 6
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+
+    final corePaint = Paint()
+      ..color = const Color(0xFF18E06F)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = strokeWidth + 1.5;
+
+    canvas.drawPath(referencePaths[index], glowPaint);
+    canvas.drawPath(referencePaths[index], corePaint);
   }
 
   void _drawHint(Canvas canvas) {
@@ -175,6 +208,8 @@ class HanziPainter extends CustomPainter {
         oldDelegate.showHint != showHint ||
         oldDelegate.hintIndex != hintIndex ||
         oldDelegate.pointerStart != pointerStart ||
-        oldDelegate.pointerDirection != pointerDirection;
+        oldDelegate.pointerDirection != pointerDirection ||
+        oldDelegate.highlightIndex != highlightIndex ||
+        oldDelegate.highlightVisible != highlightVisible;
   }
 }
