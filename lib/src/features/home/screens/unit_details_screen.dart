@@ -92,8 +92,8 @@ class UnitDetailsScreen extends StatelessWidget {
                             final navigationId = character.id.isNotEmpty
                                 ? character.id
                                 : character.hanzi;
-                            context.go(
-                              '/unit/${unit.id}/write/$navigationId',
+                            context.push(
+                              '/unit/${unit.id}/lesson/$navigationId',
                               extra: character,
                             );
                           },

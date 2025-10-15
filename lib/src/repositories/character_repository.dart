@@ -38,6 +38,15 @@ class CharacterRepository {
     });
   }
 
+  Stream<HanziCharacter?> getCharacterStream(String characterId) {
+    return _charactersCollection.doc(characterId).snapshots().map((snapshot) {
+      if (!snapshot.exists || snapshot.data() == null) {
+        return null;
+      }
+      return HanziCharacter.fromMap(snapshot.data()!, id: snapshot.id);
+    });
+  }
+
   Future<HanziCharacter?> getCharacter(String characterId) async {
     final snapshot = await _charactersCollection.doc(characterId).get();
     if (!snapshot.exists || snapshot.data() == null) {

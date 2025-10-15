@@ -1,7 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../features/auth/services/auth_service.dart';
+import '../../features/auth/services/progress_service.dart';
 import '../../models/hanzi_character.dart';
+import '../../models/user_profile.dart';
+import '../../repositories/character_repository.dart';
 
 class LessonStep {
   const LessonStep({
@@ -17,159 +22,400 @@ class LessonStep {
 
 const List<LessonStep> defaultLessonSteps = [
   LessonStep(
-    title: 'Select the pronunciation',
-    description: 'Match the hanzi with its correct pinyin audio.',
+    title: 'Nghe phát âm',
+    description: 'Chọn cách đọc chuẩn cho ký tự này.',
     icon: Icons.hearing,
   ),
   LessonStep(
-    title: 'Select the meaning',
-    description: 'Choose the translation that best fits the hanzi.',
+    title: 'Hiểu nghĩa',
+    description: 'Liên kết ký tự với nghĩa tiếng Việt.',
     icon: Icons.translate,
   ),
   LessonStep(
-    title: 'Trace the hanzi',
-    description: 'Follow the guideline to memorise the stroke order.',
+    title: 'Theo nét mẫu',
+    description: 'Lần theo nét chuẩn trước khi tự viết.',
     icon: Icons.gesture,
   ),
   LessonStep(
-    title: 'Finish the hanzi',
-    description: 'Fill in the missing strokes to reinforce recall.',
-    icon: Icons.edit,
-  ),
-  LessonStep(
-    title: 'Write the hanzi',
-    description: 'Draw the character on your own to gain confidence.',
-    icon: Icons.brush,
-  ),
-  LessonStep(
-    title: 'Build the hanzi',
-    description: 'Assemble radicals and components from memory.',
+    title: 'Ghép bộ thủ',
+    description: 'Nhớ lại các thành phần tạo nên ký tự.',
     icon: Icons.extension,
+  ),
+  LessonStep(
+    title: 'Tự luyện viết',
+    description: 'Viết lại ký tự để hoàn tất bài học.',
+    icon: Icons.brush,
   ),
 ];
 
 class CharacterLessonScreen extends StatelessWidget {
-  const CharacterLessonScreen({super.key, required this.characterId});
+  CharacterLessonScreen({
+    super.key,
+    required this.unitId,
+    required this.characterId,
+    this.initialCharacter,
+  });
 
+  final String unitId;
   final String characterId;
+  final HanziCharacter? initialCharacter;
+  final CharacterRepository _characterRepository = CharacterRepository();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Lesson for $characterId'),
-      ),
-      body: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-        future: FirebaseFirestore.instance.collection('characters').doc(characterId).get(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+    final authService = Provider.of<AuthService>(context);
+    final user = authService.user;
+    final progressService = Provider.of<ProgressService>(context, listen: false);
+
+    return StreamBuilder<HanziCharacter?>(
+      stream: _characterRepository.getCharacterStream(characterId),
+      initialData: initialCharacter,
+      builder: (context, characterSnapshot) {
+        final character = characterSnapshot.data ?? initialCharacter;
+
+        if (character == null) {
+          if (characterSnapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
           }
+          return const Scaffold(
+            body: Center(child: Text('Không tìm thấy dữ liệu ký tự.')),
+          );
+        }
 
-          if (snapshot.hasError) {
-            return const Center(child: Text('Something went wrong loading this lesson.'));
-          }
+        final progressKey = character.id.isNotEmpty ? character.id : character.hanzi;
 
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text('Character data not found.'));
-          }
+        return StreamBuilder<UserProfile?>(
+          stream: user != null
+              ? progressService.getUserProfileStream(user.uid)
+              : Stream.value(null),
+          builder: (context, profileSnapshot) {
+            final userProfile = profileSnapshot.data;
+            final completed = userProfile?.progress[progressKey] == 'completed';
 
-          final characterDoc = snapshot.data!;
-          final characterData = characterDoc.data()!;
-          final character = HanziCharacter.fromMap(characterData, id: characterDoc.id);
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24.0),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            return Scaffold(
+              appBar: AppBar(
+                title: Text('Bài học ${character.hanzi}'),
+              ),
+              body: SafeArea(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 120),
                   children: [
+                    _LessonHero(character: character, completed: completed),
+                    const SizedBox(height: 24),
+                    _CharacterQuickFacts(character: character),
+                    const SizedBox(height: 32),
                     Text(
-                      character.hanzi,
-                      style: Theme.of(context).textTheme.displayLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${character.meaning}  •  ${character.pinyin}',
+                      'Các bước luyện giống Duolingo',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+                    ...defaultLessonSteps.asMap().entries.map(
+                      (entry) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6.0),
+                        child: _LessonStepCard(
+                          stepNumber: entry.key + 1,
+                          step: entry.value,
+                          completed: completed,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Text(
-                      'Complete each step to master this character.',
+                      completed
+                          ? 'Bạn đã hoàn thành ký tự này. Ôn lại để giữ chuỗi luyện tập!'
+                          : 'Hoàn thành từng bước để nhận XP và tăng streak.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16.0,
-                    mainAxisSpacing: 16.0,
-                    childAspectRatio: 1.1,
+              bottomNavigationBar: SafeArea(
+                minimum: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                child: ElevatedButton.icon(
+                  icon: Icon(completed ? Icons.refresh : Icons.play_arrow),
+                  label: Text(completed ? 'Ôn lại luyện viết' : 'Bắt đầu luyện viết'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(56),
                   ),
-                  itemCount: defaultLessonSteps.length,
-                  itemBuilder: (context, index) {
-                    final step = defaultLessonSteps[index];
-                    return _LessonStepCard(
-                      stepNumber: index + 1,
-                      step: step,
+                  onPressed: () {
+                    context.push(
+                      '/unit/$unitId/lesson/${character.id.isNotEmpty ? character.id : character.hanzi}/write',
+                      extra: character,
                     );
                   },
                 ),
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _LessonHero extends StatelessWidget {
+  const _LessonHero({required this.character, required this.completed});
+
+  final HanziCharacter character;
+  final bool completed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.primaryContainer.withOpacity(0.4),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text(
+                    character.hanzi,
+                    style: theme.textTheme.displayLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      character.pinyin,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      character.meaning,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: completed
+                            ? Colors.green.withOpacity(0.15)
+                            : colorScheme.secondaryContainer.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            completed ? Icons.check_circle : Icons.bolt,
+                            color: completed ? Colors.green : colorScheme.secondary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            completed ? 'Đã hoàn thành' : 'Sẵn sàng luyện tập',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: completed ? Colors.green : colorScheme.secondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
-          );
-        },
+          ),
+          if (character.word != null && character.word!.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Text(
+              'Từ ví dụ',
+              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              character.word!,
+              style: theme.textTheme.bodyLarge,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CharacterQuickFacts extends StatelessWidget {
+  const _CharacterQuickFacts({required this.character});
+
+  final HanziCharacter character;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        _FactChip(
+          icon: Icons.draw,
+          label: '${character.strokeCount ?? character.strokePaths.length} nét',
+        ),
+        if (character.section != null && character.section!.isNotEmpty)
+          _FactChip(
+            icon: Icons.map,
+            label: character.section!,
+          ),
+        if (character.ttsUrl != null && character.ttsUrl!.isNotEmpty)
+          _FactChip(
+            icon: Icons.volume_up,
+            label: 'Có âm thanh',
+          ),
+        if (character.strokePaths.isNotEmpty)
+          _FactChip(
+            icon: Icons.timeline,
+            label: 'Có hướng dẫn nét',
+          ),
+      ],
+    );
+  }
+}
+
+class _FactChip extends StatelessWidget {
+  const _FactChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _LessonStepCard extends StatelessWidget {
-  const _LessonStepCard({required this.stepNumber, required this.step});
+  const _LessonStepCard({
+    required this.stepNumber,
+    required this.step,
+    required this.completed,
+  });
 
   final int stepNumber;
   final LessonStep step;
+  final bool completed;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
-              foregroundColor: theme.colorScheme.primary,
-              child: Text(stepNumber.toString()),
-            ),
-            const Spacer(),
-            Icon(step.icon, size: 32, color: theme.colorScheme.primary),
-            const SizedBox(height: 12),
-            Text(
-              step.title,
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              step.description,
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
+    final colorScheme = theme.colorScheme;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: completed
+            ? Colors.green.withOpacity(0.12)
+            : colorScheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: completed ? Colors.green : colorScheme.surfaceVariant,
+          width: 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: completed
+                ? Colors.green
+                : colorScheme.primary.withOpacity(0.15),
+            foregroundColor:
+                completed ? Colors.white : colorScheme.primary,
+            child: Text(stepNumber.toString()),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(step.icon, size: 18, color: colorScheme.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      step.title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  step.description,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Icon(
+            completed ? Icons.check_circle : Icons.lock_open,
+            color: completed ? Colors.green : colorScheme.outline,
+          ),
+        ],
       ),
     );
   }

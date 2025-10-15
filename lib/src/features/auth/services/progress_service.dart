@@ -36,6 +36,10 @@ class ProgressService {
 
       final userProfile = UserProfile.fromMap(snapshot.data()!, snapshot.id);
 
+      if (userProfile.progress[characterId] == 'completed') {
+        return;
+      }
+
       // 1. Update Progress
       final newProgress = Map<String, dynamic>.from(userProfile.progress);
       newProgress[characterId] = 'completed';

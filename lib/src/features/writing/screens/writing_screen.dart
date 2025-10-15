@@ -44,11 +44,11 @@ class WritingScreen extends StatelessWidget {
           children: [
             Expanded(
               child: Container(
-                 margin: const EdgeInsets.all(16.0),
-                 decoration: BoxDecoration(
-                   border: Border.all(color: Colors.grey.shade300, width: 2.0),
-                   borderRadius: BorderRadius.circular(12.0),
-                 ),
+                margin: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300, width: 2.0),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
                 child: Stack(
                   children: [
                     CharacterOverlay(character: character.hanzi),
@@ -66,6 +66,8 @@ class WritingScreen extends StatelessWidget {
 
   Widget _buildCompletionButton(BuildContext context) {
     final progressService = Provider.of<ProgressService>(context, listen: false);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
@@ -76,20 +78,35 @@ class WritingScreen extends StatelessWidget {
           minimumSize: const Size(double.infinity, 50), // Make button wide
         ),
         onPressed: () async {
-          // Award 10 XP for each character completion
-          final progressKey = character.id.isNotEmpty ? character.id : character.hanzi;
-          await progressService.completeCharacter(progressKey, 10);
+          final progressKey =
+              character.id.isNotEmpty ? character.id : character.hanzi;
 
-          // Show a confirmation dialog
-          ScaffoldMessenger.of(context).showSnackBar(
+          try {
+            await progressService.completeCharacter(progressKey, 10);
+          } catch (error) {
+            if (navigator.mounted) {
+              scaffoldMessenger.showSnackBar(
+                SnackBar(
+                  content: Text('Không thể lưu tiến độ: $error'),
+                  backgroundColor: Colors.redAccent,
+                ),
+              );
+            }
+            return;
+          }
+
+          if (!navigator.mounted) {
+            return;
+          }
+
+          scaffoldMessenger.showSnackBar(
             const SnackBar(
               content: Text('Tiến độ đã được lưu!'),
               backgroundColor: Colors.green,
             ),
           );
 
-          // Pop the screen
-          Navigator.of(context).pop();
+          navigator.pop();
         },
       ),
     );

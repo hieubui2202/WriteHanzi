@@ -17,7 +17,7 @@ class WritingPad extends StatelessWidget {
       onPanUpdate: (details) {
         drawingProvider.updateLine(details.localPosition);
       },
-       onPanEnd: (details) {
+      onPanEnd: (details) {
         drawingProvider.endLine();
       },
       child: CustomPaint(

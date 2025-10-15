@@ -7,7 +7,8 @@ import 'package:myapp/src/features/auth/screens/login_screen.dart';
 import 'package:myapp/src/features/auth/services/auth_service.dart';
 import 'package:myapp/src/features/home/screens/home_screen.dart';
 import 'package:myapp/src/features/home/screens/unit_details_screen.dart';
-import 'package:myapp/src/features/writing/screens/writing_screen.dart';
+import 'package:myapp/src/features/lesson_flow/character_lesson_screen.dart';
+import 'package:myapp/src/features/writing/screens/writing_screen_loader.dart';
 import 'package:myapp/src/models/hanzi_character.dart';
 import 'package:myapp/src/models/unit.dart';
 
@@ -28,35 +29,90 @@ class AppRouter {
             builder: (context, state) => const HomeScreen(),
             routes: [
               GoRoute(
-                  path: 'unit/:unitId',
-                  builder: (context, state) {
-                    final unitId = state.pathParameters['unitId'];
-                    if (unitId == null) {
-                      return const Scaffold(
-                        body: Center(child: Text('Lỗi: không tìm thấy bài học')),
-                      );
-                    }
-
-                    final extra = state.extra;
-                    final Unit? initialUnit = extra is Unit ? extra : null;
-
-                    return UnitDetailsScreen(
-                      unitId: unitId,
-                      initialUnit: initialUnit,
+                path: 'unit/:unitId',
+                builder: (context, state) {
+                  final unitId = state.pathParameters['unitId'];
+                  if (unitId == null) {
+                    return const Scaffold(
+                      body: Center(child: Text('Lỗi: không tìm thấy bài học')),
                     );
-                  },
-                  routes: [
-                    GoRoute(
-                      path: 'write/:characterId',
-                      builder: (context, state) {
-                         final character = state.extra as HanziCharacter?;
-                         if (character != null) {
-                           return WritingScreen(character: character);
-                         }
-                         return const Scaffold(body: Center(child: Text('Lỗi: không tìm thấy ký tự')));
+                  }
+
+                  final extra = state.extra;
+                  final Unit? initialUnit = extra is Unit ? extra : null;
+
+                  return UnitDetailsScreen(
+                    unitId: unitId,
+                    initialUnit: initialUnit,
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    path: 'lesson/:characterId',
+                    builder: (context, state) {
+                      final unitId = state.pathParameters['unitId'];
+                      final characterId = state.pathParameters['characterId'];
+                      if (unitId == null || characterId == null) {
+                        return const Scaffold(
+                          body: Center(child: Text('Lỗi: không tìm thấy ký tự.')),
+                        );
                       }
-                    )
-                  ]),
+
+                      final extra = state.extra;
+                      final HanziCharacter? initialCharacter =
+                          extra is HanziCharacter ? extra : null;
+
+                      return CharacterLessonScreen(
+                        unitId: unitId,
+                        characterId: characterId,
+                        initialCharacter: initialCharacter,
+                      );
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'write',
+                        builder: (context, state) {
+                          final characterId = state.pathParameters['characterId'];
+                          if (characterId == null) {
+                            return const Scaffold(
+                              body: Center(child: Text('Lỗi: không tìm thấy ký tự.')),
+                            );
+                          }
+
+                          final extra = state.extra;
+                          final HanziCharacter? initialCharacter =
+                              extra is HanziCharacter ? extra : null;
+
+                          return WritingScreenLoader(
+                            characterId: characterId,
+                            initialCharacter: initialCharacter,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'write/:characterId',
+                    builder: (context, state) {
+                      final characterId = state.pathParameters['characterId'];
+                      if (characterId == null) {
+                        return const Scaffold(
+                          body: Center(child: Text('Lỗi: không tìm thấy ký tự.')),
+                        );
+                      }
+
+                      final extra = state.extra;
+                      final HanziCharacter? initialCharacter =
+                          extra is HanziCharacter ? extra : null;
+
+                      return WritingScreenLoader(
+                        characterId: characterId,
+                        initialCharacter: initialCharacter,
+                      );
+                    },
+                  ),
+                ],
+              ),
             ]),
         GoRoute(
           path: '/login',
