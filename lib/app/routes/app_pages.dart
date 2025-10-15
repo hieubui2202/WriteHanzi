@@ -9,8 +9,8 @@ import 'package:myapp/app/modules/missing_stroke/missing_stroke_binding.dart';
 import 'package:myapp/app/modules/missing_stroke/missing_stroke_view.dart';
 import 'package:myapp/app/modules/practice_result/practice_result_binding.dart';
 import 'package:myapp/app/modules/practice_result/practice_result_view.dart';
-import 'package:myapp/app/modules/writing_practice/writing_practice_binding.dart';
-import 'package:myapp/app/modules/writing_practice/writing_practice_view.dart';
+import 'package:myapp/presentation/controllers/write_one_hanzi_binding.dart';
+import 'package:myapp/presentation/pages/write_one_hanzi_page.dart';
 
 part 'app_routes.dart';
 
@@ -30,8 +30,8 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.writingPractice,
-      page: () => const WritingPracticeView(),
-      binding: WritingPracticeBinding(),
+      page: () => const WriteOneHanziPage(),
+      binding: WriteOneHanziBinding(),
     ),
     GetPage(
       name: _Paths.missingStroke,

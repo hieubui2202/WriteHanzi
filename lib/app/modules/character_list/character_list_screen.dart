@@ -39,7 +39,7 @@ class CharacterListScreen extends StatelessWidget {
             child: ListTile(
               onTap: () => Get.toNamed(
                 Routes.writingPractice,
-                arguments: character,
+                arguments: character.id,
               ),
               title: Text(
                 display,
