@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
           final appRouter = AppRouter(context);
           return Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
-              const Color primarySeedColor = Colors.blueAccent;
+              const MaterialAccentColor primarySeedColor = Colors.blueAccent;
               final TextTheme appTextTheme = TextTheme(
                 displayLarge: GoogleFonts.notoSans(
                   fontSize: 57,
