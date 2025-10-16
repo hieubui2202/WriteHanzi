@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -29,6 +30,7 @@ class HomeController extends GetxController {
   final isLoadingLessons = false.obs;
   final isLoadingProfile = false.obs;
   final isSigningIn = false.obs;
+  final isSigningInGuest = false.obs;
   final selectedChapter = Rx<Chapter?>(null);
   final firebaseUser = Rx<User?>(null);
   final profile = Rx<UserProfile?>(null);
@@ -113,10 +115,28 @@ class HomeController extends GetxController {
         idToken: googleAuth.idToken,
       );
       await _auth.signInWithCredential(credential);
+    } on PlatformException catch (error) {
+      signInError.value = _mapSignInError(error);
+      await _fallbackToAnonymousIfNeeded(error);
     } catch (error) {
       signInError.value = error.toString();
     } finally {
       isSigningIn.value = false;
+    }
+  }
+
+  Future<void> signInAnonymously() async {
+    if (isSigningInGuest.value) {
+      return;
+    }
+    signInError.value = null;
+    try {
+      isSigningInGuest.value = true;
+      await _auth.signInAnonymously();
+    } catch (error) {
+      signInError.value = error.toString();
+    } finally {
+      isSigningInGuest.value = false;
     }
   }
 
@@ -134,6 +154,35 @@ class HomeController extends GetxController {
       }
     }
     return false;
+  }
+
+  Future<void> _fallbackToAnonymousIfNeeded(PlatformException error) async {
+    final message = error.message ?? '';
+    final code = error.code;
+    final isDeveloperError =
+        code == GoogleSignIn.kSignInFailedError && message.contains('DEVELOPER_ERROR');
+    if (!isDeveloperError) {
+      return;
+    }
+    if (_auth.currentUser != null) {
+      return;
+    }
+    try {
+      await _auth.signInAnonymously();
+      signInError.value =
+          'Không thể đăng nhập Google trên thiết bị này. Đã chuyển sang chế độ khách, bạn vẫn có thể lưu tiến trình.';
+    } catch (_) {}
+  }
+
+  String _mapSignInError(PlatformException error) {
+    if ((error.code == GoogleSignIn.kSignInCanceledError)) {
+      return 'Bạn đã huỷ đăng nhập.';
+    }
+    final message = error.message ?? '';
+    if (message.contains('DEVELOPER_ERROR') || message.contains('SERVICE_INVALID')) {
+      return 'Google Play Services không khả dụng trên thiết bị này. Hãy thử đăng nhập lại hoặc dùng chế độ khách.';
+    }
+    return error.message ?? 'Không thể đăng nhập bằng Google.';
   }
 
   double lessonProgress(Lesson lesson) {

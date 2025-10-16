@@ -100,6 +100,45 @@ class HomeScreen extends GetView<HomeController> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                Text(
+                  'Hoặc',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: controller.isSigningInGuest.value
+                        ? null
+                        : () => controller.signInAnonymously(),
+                    icon: Icon(
+                      Icons.person_outline,
+                      color: Colors.white.withOpacity(0.85),
+                    ),
+                    label: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text(
+                        controller.isSigningInGuest.value
+                            ? 'Đang tạo tài khoản khách...'
+                            : 'Tiếp tục không cần Google',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(color: Colors.white.withOpacity(0.28)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
                 if (controller.signInError.value != null) ...[
                   const SizedBox(height: 16),
                   Text(
