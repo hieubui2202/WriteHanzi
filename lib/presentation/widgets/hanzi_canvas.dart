@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:path_drawing/path_drawing.dart';
@@ -45,6 +46,9 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
   double _replayProgress = 0;
   int _replayStroke = 0;
 
+  Timer? _hintTimer;
+  int? _hintStroke;
+
   final Map<int, DateTime> _highlights = {};
 
   @override
@@ -65,6 +69,9 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
   }
 
   void _initializeFromWidget() {
+    _hintTimer?.cancel();
+    _hintStroke = null;
+
     final parsed = widget.svgList.map(_engine.parse).toList(growable: false);
     if (parsed.isEmpty) {
       _paths = List<Path>.empty(growable: false);
@@ -73,11 +80,19 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
       for (final path in parsed.skip(1)) {
         bounds = bounds.expandToInclude(path.getBounds());
       }
-      final width = bounds.width == 0 ? 1.0 : bounds.width;
-      final height = bounds.height == 0 ? 1.0 : bounds.height;
-      final matrix = vmath.Matrix4.identity()..scale(1 / width, 1 / height);
+      final width = bounds.width;
+      final height = bounds.height;
+      final largestSide = math.max(width, height);
+      final scale = largestSide == 0 ? 1.0 : 1 / largestSide;
+      final dx = (1 - width * scale) / 2;
+      final dy = (1 - height * scale) / 2;
       _paths = parsed
-          .map((path) => path.shift(Offset(-bounds.left, -bounds.top)).transform(matrix.storage))
+          .map(
+            (path) => path
+                .shift(Offset(-bounds.left, -bounds.top))
+                .transform((vmath.Matrix4.identity()..scale(scale, scale)).storage)
+                .shift(Offset(dx, dy)),
+          )
           .toList(growable: false);
     }
     _preRenderedCount = widget.preRenderedCount.clamp(0, _paths.length);
@@ -101,6 +116,9 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
       _matched.removeWhere((index) => index >= _paths.length);
       for (int i = 0; i < _preRenderedCount; i++) {
         _matched.add(i);
+      }
+      if (_hintStroke != null && (_hintStroke! < 0 || _hintStroke! >= _paths.length)) {
+        _hintStroke = null;
       }
     });
   }
@@ -128,6 +146,8 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
 
   void replay() {
     _replayTimer?.cancel();
+    _hintTimer?.cancel();
+    _hintStroke = null;
     setState(() {
       _isReplaying = true;
       _replayStroke = 0;
@@ -155,6 +175,8 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
       for (int i = 0; i < _preRenderedCount; i++) {
         _matched.add(i);
       }
+      _hintTimer?.cancel();
+      _hintStroke = null;
     });
   }
 
@@ -165,7 +187,35 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
       for (int i = 0; i < _preRenderedCount; i++) {
         _matched.add(i);
       }
+      _hintTimer?.cancel();
+      _hintStroke = null;
     });
+  }
+
+  void showHint({bool hold = false}) {
+    final index = _nextExpectedIndex;
+    if (index == null) {
+      return;
+    }
+    _hintTimer?.cancel();
+    setState(() {
+      _hintStroke = index;
+    });
+    if (!hold) {
+      _hintTimer = Timer(const Duration(milliseconds: 1600), () {
+        if (!mounted) {
+          return;
+        }
+        if (_matched.contains(index)) {
+          return;
+        }
+        setState(() {
+          if (_hintStroke == index) {
+            _hintStroke = null;
+          }
+        });
+      });
+    }
   }
 
   bool get isComplete => _expectedOrder.every(_matched.contains);
@@ -174,6 +224,7 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
   @override
   void dispose() {
     _replayTimer?.cancel();
+    _hintTimer?.cancel();
     super.dispose();
   }
 
@@ -223,8 +274,10 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
     if (match) {
       setState(() {
         _matched.add(targetIndex);
-      _highlights[targetIndex] = DateTime.now();
-      _activeStroke = [];
+        _hintTimer?.cancel();
+        _hintStroke = null;
+        _highlights[targetIndex] = DateTime.now();
+        _activeStroke = [];
       });
       widget.onStrokeMatched?.call(targetIndex);
     } else {
@@ -246,6 +299,9 @@ class HanziStrokeCanvasState extends State<HanziStrokeCanvas> {
     return LayoutBuilder(
       builder: (context, constraints) {
         return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: showHint,
+          onDoubleTap: replay,
           onPanStart: (details) => _handlePanStart(details, constraints),
           onPanUpdate: (details) => _handlePanUpdate(details, constraints),
           onPanEnd: _handlePanEnd,
@@ -315,22 +371,24 @@ class _HanziCanvasPainter extends CustomPainter {
   }
 
   void _drawStandard(Canvas canvas, Size size) {
+    if (_hintStroke == null) {
+      return;
+    }
+    final index = _hintStroke!;
+    if (index < 0 || index >= paths.length || matched.contains(index)) {
+      return;
+    }
     final ghostPaint = Paint()
-      ..color = Colors.white24
+      ..color = Colors.white30
       ..style = PaintingStyle.stroke
       ..strokeWidth = 12
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    for (int i = 0; i < paths.length; i++) {
-      if (matched.contains(i)) {
-        continue;
-      }
-      final matrix = vmath.Matrix4.identity()..scale(size.width, size.height);
-      final transformed = paths[i].transform(matrix.storage);
-      final dashed = dashPath(transformed, dashArray: CircularIntervalList<double>(const <double>[12, 12]));
-      canvas.drawPath(dashed, ghostPaint);
-    }
+    final matrix = vmath.Matrix4.identity()..scale(size.width, size.height);
+    final transformed = paths[index].transform(matrix.storage);
+    final dashed = dashPath(transformed, dashArray: CircularIntervalList<double>(const <double>[10, 10]));
+    canvas.drawPath(dashed, ghostPaint);
   }
 
   void _drawHighlights(Canvas canvas, Size size) {

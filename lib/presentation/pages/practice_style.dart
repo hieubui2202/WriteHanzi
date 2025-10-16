@@ -25,6 +25,18 @@ TextStyle bodyStyle({double fontSize = 16, FontWeight fontWeight = FontWeight.w5
       fontFamily: 'Arial',
     );
 
+TextStyle helperStyle({double fontSize = 14}) => bodyStyle(fontSize: fontSize).copyWith(
+      color: Colors.white60,
+      fontWeight: FontWeight.w500,
+    );
+
+Widget hintCaption({String text = 'Tap once for a hint. Double-tap the canvas for a walkthrough.'}) =>
+    Text(
+      text,
+      textAlign: TextAlign.center,
+      style: helperStyle(fontSize: 14),
+    );
+
 final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
   backgroundColor: practicePrimary,
   foregroundColor: Colors.black,
